@@ -70,7 +70,7 @@ function createRecorderHandle(stream: MediaStream, options: MediaRecorderOptions
 	const mimeType = options.mimeType || "video/webm";
 	const recordedBlobPromise = new Promise<Blob>((resolve, reject) => {
 		recorder.ondataavailable = (event: BlobEvent) => {
-			if (event.data && event.data.size > 0) {
+			if (event.data?.size > 0) {
 				chunks.push(event.data);
 			}
 		};
