@@ -884,25 +884,12 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 						const raw = targetFocus;
 						const isZoomingIn =
 							targetProgress < 0.999 && targetProgress >= prevTargetProgressRef.current;
-						if (targetProgress >= 0.999) {
-							// Full zoom: adaptive smoothing — moves faster when far, decelerates when close
-							const prev = smoothedAutoFocusRef.current ?? raw;
-							const factor = adaptiveSmoothFactor(
-								raw,
-								prev,
-								AUTO_FOLLOW_SMOOTHING_FACTOR,
-								AUTO_FOLLOW_SMOOTHING_FACTOR_MAX,
-								AUTO_FOLLOW_RAMP_DISTANCE,
-							);
-							const smoothed = smoothCursorFocus(raw, prev, factor);
-							smoothedAutoFocusRef.current = smoothed;
-							targetFocus = smoothed;
-						} else if (isZoomingIn) {
+						if (isZoomingIn) {
 							// Zoom-in: track cursor directly so zoom always aims at current cursor
 							// position; keep ref in sync to avoid snap when full-zoom begins
 							smoothedAutoFocusRef.current = raw;
 						} else {
-							// Zoom-out: keep smoothing for continuity — avoids snap at zoom-out start
+							// Full zoom or zoom-out: adaptive smoothing — moves faster when far, decelerates when close
 							const prev = smoothedAutoFocusRef.current ?? raw;
 							const factor = adaptiveSmoothFactor(
 								raw,
@@ -980,15 +967,15 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 
 				const appliedScale =
 					Math.abs(projectedTransform.scale - prevScale) < ZOOM_SCALE_DEADZONE
-						? projectedTransform.scale
+						? prevScale
 						: projectedTransform.scale;
 				const appliedX =
 					Math.abs(projectedTransform.x - prevX) < ZOOM_TRANSLATION_DEADZONE_PX
-						? projectedTransform.x
+						? prevX
 						: projectedTransform.x;
 				const appliedY =
 					Math.abs(projectedTransform.y - prevY) < ZOOM_TRANSLATION_DEADZONE_PX
-						? projectedTransform.y
+						? prevY
 						: projectedTransform.y;
 
 				const motionIntensity = Math.max(

@@ -553,26 +553,12 @@ export class FrameRenderer {
 				const dtMs = this.prevAnimationTimeMs != null ? timeMs - this.prevAnimationTimeMs : 0;
 				const framesElapsed = dtMs > 0 ? dtMs / (1000 / 60) : 1;
 				const isZoomingIn = targetProgress < 0.999 && targetProgress >= this.prevTargetProgress;
-				if (targetProgress >= 0.999) {
-					// Full zoom: adaptive smoothing — moves faster when far, decelerates when close
-					const prev = this.smoothedAutoFocus ?? raw;
-					const baseFactor = adaptiveSmoothFactor(
-						raw,
-						prev,
-						AUTO_FOLLOW_SMOOTHING_FACTOR,
-						AUTO_FOLLOW_SMOOTHING_FACTOR_MAX,
-						AUTO_FOLLOW_RAMP_DISTANCE,
-					);
-					const factor = 1 - Math.pow(1 - baseFactor, Math.max(1, framesElapsed));
-					const smoothed = smoothCursorFocus(raw, prev, factor);
-					this.smoothedAutoFocus = smoothed;
-					targetFocus = smoothed;
-				} else if (isZoomingIn) {
+				if (isZoomingIn) {
 					// Zoom-in: track cursor directly so zoom always aims at current cursor
 					// position; keep ref in sync to avoid snap when full-zoom begins
 					this.smoothedAutoFocus = raw;
 				} else {
-					// Zoom-out: keep smoothing for continuity — avoids snap at zoom-out start
+					// Full zoom or zoom-out: adaptive smoothing — moves faster when far, decelerates when close
 					const prev = this.smoothedAutoFocus ?? raw;
 					const baseFactor = adaptiveSmoothFactor(
 						raw,
@@ -651,15 +637,15 @@ export class FrameRenderer {
 
 		const appliedScale =
 			Math.abs(projectedTransform.scale - prevScale) < ZOOM_SCALE_DEADZONE
-				? projectedTransform.scale
+				? prevScale
 				: projectedTransform.scale;
 		const appliedX =
 			Math.abs(projectedTransform.x - prevX) < ZOOM_TRANSLATION_DEADZONE_PX
-				? projectedTransform.x
+				? prevX
 				: projectedTransform.x;
 		const appliedY =
 			Math.abs(projectedTransform.y - prevY) < ZOOM_TRANSLATION_DEADZONE_PX
-				? projectedTransform.y
+				? prevY
 				: projectedTransform.y;
 
 		state.x = appliedX;
