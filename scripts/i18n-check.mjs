@@ -11,7 +11,7 @@ import path from "node:path";
 
 const LOCALES_DIR = path.resolve("src/i18n/locales");
 const BASE_LOCALE = "en";
-const COMPARE_LOCALES = ["zh-CN", "es", "tr"];
+const COMPARE_LOCALES = ["zh-CN", "es", "fr", "tr"];
 
 function getKeys(obj, prefix = "") {
 	const keys = [];
