@@ -454,7 +454,7 @@ function TimelineAxis({
 
 	return (
 		<div
-			className="h-6 bg-[#09090b] border-b border-white/5 relative overflow-hidden select-none"
+			className="h-6 bg-[#06060b] border-b border-white/5 relative overflow-hidden select-none"
 			style={{
 				[sideProperty === "right" ? "marginRight" : "marginLeft"]: `${sidebarWidth}px`,
 			}}
@@ -638,7 +638,7 @@ function Timeline({
 		<div
 			ref={setRefs}
 			style={style}
-			className="select-none bg-[#09090b] relative cursor-pointer group"
+			className="select-none bg-[#06060b] relative cursor-pointer group"
 			onClick={handleTimelineClick}
 			onWheel={handleTimelineWheel}
 		>
@@ -1303,7 +1303,7 @@ export default function TimelineEditor({
 
 	if (!videoDuration || videoDuration === 0) {
 		return (
-			<div className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#09090b] gap-3">
+			<div className="flex-1 flex flex-col items-center justify-center rounded-lg bg-[#06060b] gap-3">
 				<div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
 					<Plus className="w-6 h-6 text-slate-600" />
 				</div>
@@ -1316,8 +1316,8 @@ export default function TimelineEditor({
 	}
 
 	return (
-		<div className="flex-1 flex flex-col bg-[#09090b] overflow-hidden">
-			<div className="flex items-center gap-2 px-4 py-2 border-b border-white/5 bg-[#09090b]">
+		<div className="flex-1 flex flex-col bg-[#06060b] overflow-hidden">
+			<div className="flex items-center gap-2 px-4 py-2 border-b border-white/5 bg-[#06060b]">
 				<div className="flex items-center gap-2">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -1394,7 +1394,7 @@ export default function TimelineEditor({
 			</div>
 			<div
 				ref={timelineContainerRef}
-				className="flex-1 overflow-hidden bg-[#09090b] relative"
+				className="flex-1 overflow-hidden bg-[#06060b] relative"
 				onClick={() => setSelectedKeyframeId(null)}
 			>
 				<TimelineWrapper

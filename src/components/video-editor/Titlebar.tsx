@@ -48,7 +48,7 @@ export default function Titlebar({
 
 	return (
 		<div
-			className="h-10 flex-shrink-0 bg-[#09090b]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-3 z-50"
+			className="h-[42px] flex-shrink-0 bg-[#0a0a11] border-b border-white/5 flex items-center justify-between px-3 z-50"
 			style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
 		>
 			{/* Left */}

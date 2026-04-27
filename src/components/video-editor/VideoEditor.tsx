@@ -1887,7 +1887,7 @@ export default function VideoEditor() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-[#09090b] text-slate-200 overflow-hidden selection:bg-[#34B27B]/30">
+		<div className="flex flex-col h-screen bg-[#07070c] text-slate-200 overflow-hidden selection:bg-[#34B27B]/30">
 			<Dialog open={showNewRecordingDialog} onOpenChange={setShowNewRecordingDialog}>
 				<DialogContent
 					className="sm:max-w-[425px]"
@@ -1946,8 +1946,8 @@ export default function VideoEditor() {
 									ref={playerContainerRef}
 									className={
 										isFullscreen
-											? "fixed inset-0 z-[99999] w-full h-full flex flex-col items-center justify-center bg-[#09090b]"
-											: "flex-1 flex flex-col items-center justify-center bg-black/40 border-r border-white/5 overflow-hidden relative"
+											? "fixed inset-0 z-[99999] w-full h-full flex flex-col items-center justify-center bg-[#07070c]"
+											: "flex-1 flex flex-col items-center justify-center bg-[#0a0a10] border-r border-white/[0.04] overflow-hidden relative"
 									}
 								>
 									{/* Video preview */}
@@ -2131,13 +2131,13 @@ export default function VideoEditor() {
 						</div>
 					</Panel>
 
-					<PanelResizeHandle className="bg-[#09090b]/80 hover:bg-[#09090b] transition-colors flex items-center justify-center h-1.5">
-						<div className="w-8 h-1 bg-white/20 rounded-full"></div>
+					<PanelResizeHandle className="bg-[#06060b] hover:bg-[#0a0a11] transition-colors flex items-center justify-center h-1.5">
+						<div className="w-8 h-1 bg-white/15 rounded-full"></div>
 					</PanelResizeHandle>
 
 					{/* Lower section: PlaybackBar (full width) + Timeline */}
 					<Panel defaultSize={30} maxSize={60} minSize={20}>
-						<div className="h-full bg-[#09090b] overflow-hidden flex flex-col">
+						<div className="h-full bg-[#07070c] overflow-hidden flex flex-col">
 							{/* Playback bar — full width, above the timeline */}
 							<PlaybackBar
 								isPlaying={isPlaying}

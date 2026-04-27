@@ -53,7 +53,7 @@ export default function TabRail({ activeTab, onSelect, modified = {} }: TabRailP
 						title={tab.label}
 						onClick={() => onSelect(isActive ? null : tab.id)}
 						className={`
-							w-11 py-2 rounded-lg border flex flex-col items-center justify-center gap-1.5
+							w-[42px] py-2 rounded-lg border flex flex-col items-center justify-center gap-1.5
 							transition-all duration-150 cursor-pointer relative
 							${
 								isActive

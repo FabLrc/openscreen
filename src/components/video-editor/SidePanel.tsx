@@ -14,7 +14,7 @@ export default function SidePanel({ activeTab, onClose, children }: SidePanelPro
 	if (!tab) return null;
 
 	return (
-		<div className="w-[264px] bg-[#0e0e18] border-l border-white/[0.06] flex flex-col overflow-hidden flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.25)]">
+		<div className="w-[244px] bg-[#0e0e18] border-l border-white/[0.06] flex flex-col overflow-hidden flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.25)]">
 			{/* Header */}
 			<div className="px-3.5 py-2.5 border-b border-white/[0.06] flex items-center gap-2 flex-shrink-0">
 				<span className="text-[#34B27B]">{tab.icon}</span>

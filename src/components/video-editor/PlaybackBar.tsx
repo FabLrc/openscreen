@@ -68,7 +68,7 @@ export default function PlaybackBar({
 	const hasVideo = duration > 0;
 
 	return (
-		<div className="flex items-center gap-3 px-3 py-2 bg-[#09090b] border-t border-white/5">
+		<div className="flex items-center gap-3 px-3 py-2 bg-[#0a0a11] border-t border-white/5">
 			{/* Left: Playback controls */}
 			<div className="flex items-center gap-1 shrink-0">
 				<Button

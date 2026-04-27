@@ -53,7 +53,7 @@ export default function TimelineOverview({
 	if (videoDurationMs <= 0) {
 		return (
 			<div
-				className="h-10 bg-[#09090b] border-b border-white/5 relative"
+				className="h-10 bg-[#06060b] border-b border-white/5 relative"
 				style={{ marginLeft: sidebarWidth }}
 			/>
 		);
@@ -65,7 +65,7 @@ export default function TimelineOverview({
 
 	return (
 		<div
-			className="h-6 bg-[#09090b] border-b border-white/5 relative shrink-0"
+			className="h-6 bg-[#06060b] border-b border-white/5 relative shrink-0"
 			style={{ paddingLeft: sidebarWidth }}
 		>
 			<div
