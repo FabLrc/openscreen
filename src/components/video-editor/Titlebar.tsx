@@ -1,4 +1,14 @@
-import { Download, FolderOpen, Languages, Redo2, Save, Search, Undo2, Video } from "lucide-react";
+import {
+	Download,
+	FolderOpen,
+	Keyboard,
+	Languages,
+	Redo2,
+	Save,
+	Search,
+	Undo2,
+	Video,
+} from "lucide-react";
 import { useI18n, useScopedT } from "@/contexts/I18nContext";
 import { type Locale } from "@/i18n/config";
 import { getAvailableLocales, getLocaleName } from "@/i18n/loader";
@@ -14,6 +24,7 @@ interface TitlebarProps {
 	onRedo: () => void;
 	onExport: () => void;
 	onSearch: () => void;
+	onShortcuts: () => void;
 	onNewRecording: () => void;
 	onLoadProject: () => void;
 	onSaveProject: () => void;
@@ -38,6 +49,7 @@ export default function Titlebar({
 	onRedo,
 	onExport,
 	onSearch,
+	onShortcuts,
 	onNewRecording,
 	onLoadProject,
 	onSaveProject,
@@ -166,6 +178,16 @@ export default function Titlebar({
 					<kbd className="text-[9px] text-white/30 bg-white/[0.04] border border-white/[0.06] rounded px-1 font-sans">
 						{isMac ? "⌘K" : "Ctrl+K"}
 					</kbd>
+				</button>
+
+				{/* Keyboard shortcuts */}
+				<button
+					type="button"
+					onClick={onShortcuts}
+					title="Keyboard shortcuts"
+					className="w-7 h-7 rounded-md border border-white/[0.06] bg-white/[0.02] text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition-all duration-120 flex items-center justify-center"
+				>
+					<Keyboard size={13} />
 				</button>
 
 				{/* Divider */}

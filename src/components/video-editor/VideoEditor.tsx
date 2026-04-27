@@ -164,7 +164,7 @@ export default function VideoEditor() {
 	const nextTrimIdRef = useRef(1);
 	const nextSpeedIdRef = useRef(1);
 
-	const { shortcuts, isMac } = useShortcuts();
+	const { shortcuts, isMac, openConfig } = useShortcuts();
 	const { locale, setLocale, t: rawT } = useI18n();
 	const t = useScopedT("editor");
 	const ts = useScopedT("settings");
@@ -1929,6 +1929,7 @@ export default function VideoEditor() {
 				onSearch={() => {
 					// TODO: open command palette (step 7)
 				}}
+				onShortcuts={openConfig}
 				onNewRecording={() => setShowNewRecordingDialog(true)}
 				onLoadProject={handleLoadProject}
 				onSaveProject={handleSaveProject}
