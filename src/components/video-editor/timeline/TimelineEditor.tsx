@@ -1,6 +1,6 @@
 import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
-import { Check, ChevronDown, Plus } from "lucide-react";
+import { Check, ChevronDown, Plus, ZoomIn } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -16,12 +16,12 @@ import { useShortcuts } from "@/contexts/ShortcutsContext";
 import { matchesShortcut } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
 import { ASPECT_RATIOS, type AspectRatio, getAspectRatioLabel } from "@/utils/aspectRatioUtils";
-import { formatShortcut } from "@/utils/platformUtils";
 import { TutorialHelp } from "../TutorialHelp";
 import type { AnnotationRegion, SpeedRegion, TrimRegion, ZoomRegion } from "../types";
 import Item from "./Item";
 import KeyframeMarkers from "./KeyframeMarkers";
 import Row from "./Row";
+import TimelineOverview from "./TimelineOverview";
 import TimelineWrapper from "./TimelineWrapper";
 
 const ZOOM_ROW_ID = "row-zoom";
@@ -454,7 +454,7 @@ function TimelineAxis({
 
 	return (
 		<div
-			className="h-8 bg-[#09090b] border-b border-white/5 relative overflow-hidden select-none"
+			className="h-6 bg-[#09090b] border-b border-white/5 relative overflow-hidden select-none"
 			style={{
 				[sideProperty === "right" ? "marginRight" : "marginLeft"]: `${sidebarWidth}px`,
 			}}
@@ -486,8 +486,8 @@ function TimelineAxis({
 
 				return (
 					<div key={marker.time} style={markerStyle}>
-						<div className="flex flex-col items-center pb-1">
-							<div className="h-2 w-[1px] bg-white/20 mb-1" />
+						<div className="flex flex-col items-center pb-0.5">
+							<div className="h-1.5 w-[1px] bg-white/20 mb-0.5" />
 							<span
 								className={cn(
 									"text-[10px] font-medium tabular-nums tracking-tight",
@@ -638,7 +638,7 @@ function Timeline({
 		<div
 			ref={setRefs}
 			style={style}
-			className="select-none bg-[#09090b] min-h-[140px] relative cursor-pointer group"
+			className="select-none bg-[#09090b] relative cursor-pointer group"
 			onClick={handleTimelineClick}
 			onWheel={handleTimelineWheel}
 		>
@@ -795,18 +795,8 @@ export default function TimelineEditor({
 	const [range, setRange] = useState<Range>(() => createInitialRange(totalMs));
 	const [keyframes, setKeyframes] = useState<{ id: string; time: number }[]>([]);
 	const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(null);
-	const [scrollLabels, setScrollLabels] = useState({
-		pan: "Scroll",
-		zoom: "Ctrl + Scroll",
-	});
 	const timelineContainerRef = useRef<HTMLDivElement>(null);
 	const { shortcuts: keyShortcuts, isMac } = useShortcuts();
-
-	useEffect(() => {
-		formatShortcut(["mod", "Scroll"]).then((zoom) => {
-			setScrollLabels({ pan: "Scroll", zoom });
-		});
-	}, []);
 
 	// Add keyframe at current playhead position
 	const addKeyframe = useCallback(() => {
@@ -1357,19 +1347,49 @@ export default function TimelineEditor({
 					<TutorialHelp />
 				</div>
 				<div className="flex-1" />
-				<div className="flex items-center gap-4 text-[10px] text-slate-500 font-medium">
-					<span className="flex items-center gap-1.5">
-						<kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[#34B27B] font-sans">
-							{scrollLabels.pan}
-						</kbd>
-						<span>{t("labels.pan")}</span>
-					</span>
-					<span className="flex items-center gap-1.5">
-						<kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[#34B27B] font-sans">
-							{scrollLabels.zoom}
-						</kbd>
-						<span>{t("labels.zoom")}</span>
-					</span>
+				<div className="flex items-center gap-1">
+					{(["fit", 100, 75, 50, 25] as const).map((preset) => {
+						const isActive =
+							preset === "fit"
+								? range.start === 0 && range.end === totalMs
+								: Math.abs(
+										(range.end - range.start) / totalMs - (preset === 100 ? 1 : preset / 100),
+									) < 0.01;
+						return (
+							<Button
+								key={preset}
+								onClick={() => {
+									if (totalMs <= 0) return;
+									if (preset === "fit") {
+										setRange({ start: 0, end: totalMs });
+										return;
+									}
+									const visibleSpan = totalMs * (preset / 100);
+									const half = visibleSpan / 2;
+									const center = Math.max(half, Math.min(currentTimeMs, totalMs - half));
+									setRange({
+										start: Math.max(0, center - half),
+										end: Math.min(totalMs, center + half),
+									});
+								}}
+								variant="ghost"
+								size="sm"
+								className={cn(
+									"h-6 px-1.5 text-[10px] font-medium transition-all",
+									isActive
+										? "bg-white/10 text-white"
+										: "text-slate-500 hover:text-slate-300 hover:bg-white/5",
+								)}
+							>
+								{preset === "fit" ? "Fit" : `${preset}%`}
+							</Button>
+						);
+					})}
+					<div className="w-[1px] h-4 bg-white/10 mx-1" />
+					<div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium tabular-nums">
+						<ZoomIn className="w-3.5 h-3.5 text-slate-500" />
+						<span>{Math.round((totalMs / Math.max(range.end - range.start, 1)) * 100)}%</span>
+					</div>
 				</div>
 			</div>
 			<div
@@ -1387,6 +1407,40 @@ export default function TimelineEditor({
 					onItemSpanChange={handleItemSpanChange}
 					allRegionSpans={allRegionSpans}
 				>
+					<TimelineOverview
+						regions={[
+							...zoomRegions.map((r) => ({
+								id: r.id,
+								span: { start: r.startMs, end: r.endMs },
+								variant: "zoom" as const,
+							})),
+							...trimRegions.map((r) => ({
+								id: r.id,
+								span: { start: r.startMs, end: r.endMs },
+								variant: "trim" as const,
+							})),
+							...speedRegions.map((r) => ({
+								id: r.id,
+								span: { start: r.startMs, end: r.endMs },
+								variant: "speed" as const,
+							})),
+							...annotationRegions.map((r) => ({
+								id: r.id,
+								span: { start: r.startMs, end: r.endMs },
+								variant: "annotation" as const,
+							})),
+							...blurRegions.map((r) => ({
+								id: r.id,
+								span: { start: r.startMs, end: r.endMs },
+								variant: "blur" as const,
+							})),
+						]}
+						currentTimeMs={currentTimeMs}
+						videoDurationMs={totalMs}
+						viewportStartMs={range.start}
+						viewportEndMs={range.end}
+						onSeek={onSeek}
+					/>
 					<KeyframeMarkers
 						keyframes={keyframes}
 						selectedKeyframeId={selectedKeyframeId}

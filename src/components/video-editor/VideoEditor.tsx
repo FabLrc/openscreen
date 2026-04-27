@@ -2014,24 +2014,26 @@ export default function VideoEditor() {
 											/>
 										</div>
 									</div>
-									{/* Playback bar */}
-									<PlaybackBar
-										isPlaying={isPlaying}
-										currentTime={currentTime}
-										duration={duration}
-										isFullscreen={isFullscreen}
-										onToggleFullscreen={toggleFullscreen}
-										onTogglePlayPause={togglePlayPause}
-										onSeek={handleSeek}
-										onStepBackward={handleStepBackward}
-										onStepForward={handleStepForward}
-										onAddZoom={handleAddZoomFromBar}
-										onSuggestZooms={handleSuggestZoomsFromBar}
-										onAddTrim={handleAddTrimFromBar}
-										onAddAnnotation={handleAddAnnotationFromBar}
-										onAddBlur={handleAddBlurFromBar}
-										onAddSpeed={handleAddSpeedFromBar}
-									/>
+									{/* Playback bar — shown here only in fullscreen mode */}
+									{isFullscreen && (
+										<PlaybackBar
+											isPlaying={isPlaying}
+											currentTime={currentTime}
+											duration={duration}
+											isFullscreen={isFullscreen}
+											onToggleFullscreen={toggleFullscreen}
+											onTogglePlayPause={togglePlayPause}
+											onSeek={handleSeek}
+											onStepBackward={handleStepBackward}
+											onStepForward={handleStepForward}
+											onAddZoom={handleAddZoomFromBar}
+											onSuggestZooms={handleSuggestZoomsFromBar}
+											onAddTrim={handleAddTrimFromBar}
+											onAddAnnotation={handleAddAnnotationFromBar}
+											onAddBlur={handleAddBlurFromBar}
+											onAddSpeed={handleAddSpeedFromBar}
+										/>
+									)}
 								</div>
 							</div>
 
@@ -2133,9 +2135,27 @@ export default function VideoEditor() {
 						<div className="w-8 h-1 bg-white/20 rounded-full"></div>
 					</PanelResizeHandle>
 
-					{/* Lower section: Timeline (full width) */}
+					{/* Lower section: PlaybackBar (full width) + Timeline */}
 					<Panel defaultSize={30} maxSize={60} minSize={20}>
-						<div className="h-full bg-[#09090b] border-t border-white/5 overflow-hidden flex flex-col">
+						<div className="h-full bg-[#09090b] overflow-hidden flex flex-col">
+							{/* Playback bar — full width, above the timeline */}
+							<PlaybackBar
+								isPlaying={isPlaying}
+								currentTime={currentTime}
+								duration={duration}
+								isFullscreen={isFullscreen}
+								onToggleFullscreen={toggleFullscreen}
+								onTogglePlayPause={togglePlayPause}
+								onSeek={handleSeek}
+								onStepBackward={handleStepBackward}
+								onStepForward={handleStepForward}
+								onAddZoom={handleAddZoomFromBar}
+								onSuggestZooms={handleSuggestZoomsFromBar}
+								onAddTrim={handleAddTrimFromBar}
+								onAddAnnotation={handleAddAnnotationFromBar}
+								onAddBlur={handleAddBlurFromBar}
+								onAddSpeed={handleAddSpeedFromBar}
+							/>
 							<TimelineEditor
 								videoDuration={duration}
 								currentTime={currentTime}
