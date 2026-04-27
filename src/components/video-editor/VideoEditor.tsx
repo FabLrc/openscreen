@@ -49,6 +49,8 @@ import {
 	validateProjectData,
 } from "./projectPersistence";
 import { SettingsPanel } from "./SettingsPanel";
+import SidePanel from "./SidePanel";
+import TabRail from "./TabRail";
 import Titlebar from "./Titlebar";
 import TimelineEditor from "./timeline/TimelineEditor";
 import {
@@ -130,6 +132,7 @@ export default function VideoEditor() {
 	const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
 	const [exportError, setExportError] = useState<string | null>(null);
 	const [showExportDialog, setShowExportDialog] = useState(false);
+	const [activeTab, setActiveTab] = useState<string | null>(null);
 	const [showNewRecordingDialog, setShowNewRecordingDialog] = useState(false);
 	const [exportQuality, setExportQuality] = useState<ExportQuality>("good");
 	const [exportFormat, setExportFormat] = useState<ExportFormat>("mp4");
@@ -1846,108 +1849,118 @@ export default function VideoEditor() {
 								</div>
 							</div>
 
-							{/* Right: Settings panel */}
-							<div className="w-[320px] flex-shrink-0 h-full bg-[#09090b]">
-								<SettingsPanel
-									selected={wallpaper}
-									onWallpaperChange={(w) => pushState({ wallpaper: w })}
-									selectedZoomDepth={
-										selectedZoomId ? zoomRegions.find((z) => z.id === selectedZoomId)?.depth : null
-									}
-									onZoomDepthChange={(depth) => selectedZoomId && handleZoomDepthChange(depth)}
-									selectedZoomFocusMode={
-										selectedZoomId
-											? (zoomRegions.find((z) => z.id === selectedZoomId)?.focusMode ?? "manual")
-											: null
-									}
-									onZoomFocusModeChange={(mode) =>
-										selectedZoomId && handleZoomFocusModeChange(mode)
-									}
-									hasCursorTelemetry={cursorTelemetry.length > 0}
-									selectedZoomId={selectedZoomId}
-									onZoomDelete={handleZoomDelete}
-									selectedTrimId={selectedTrimId}
-									onTrimDelete={handleTrimDelete}
-									shadowIntensity={shadowIntensity}
-									onShadowChange={(v) => updateState({ shadowIntensity: v })}
-									onShadowCommit={commitState}
-									showBlur={showBlur}
-									onBlurChange={(v) => pushState({ showBlur: v })}
-									motionBlurAmount={motionBlurAmount}
-									onMotionBlurChange={(v) => updateState({ motionBlurAmount: v })}
-									onMotionBlurCommit={commitState}
-									borderRadius={borderRadius}
-									onBorderRadiusChange={(v) => updateState({ borderRadius: v })}
-									onBorderRadiusCommit={commitState}
-									padding={padding}
-									onPaddingChange={(v) => updateState({ padding: v })}
-									onPaddingCommit={commitState}
-									cropRegion={cropRegion}
-									onCropChange={(r) => pushState({ cropRegion: r })}
-									aspectRatio={aspectRatio}
-									hasWebcam={Boolean(webcamVideoPath)}
-									webcamLayoutPreset={webcamLayoutPreset}
-									onWebcamLayoutPresetChange={(preset) =>
-										pushState({
-											webcamLayoutPreset: preset,
-											webcamPosition: preset === "picture-in-picture" ? webcamPosition : null,
-										})
-									}
-									webcamMaskShape={webcamMaskShape}
-									onWebcamMaskShapeChange={(shape) => pushState({ webcamMaskShape: shape })}
-									webcamSizePreset={webcamSizePreset}
-									onWebcamSizePresetChange={(v) => updateState({ webcamSizePreset: v })}
-									onWebcamSizePresetCommit={commitState}
-									videoElement={videoPlaybackRef.current?.video || null}
-									exportQuality={exportQuality}
-									onExportQualityChange={setExportQuality}
-									exportFormat={exportFormat}
-									onExportFormatChange={setExportFormat}
-									gifFrameRate={gifFrameRate}
-									onGifFrameRateChange={setGifFrameRate}
-									gifLoop={gifLoop}
-									onGifLoopChange={setGifLoop}
-									gifSizePreset={gifSizePreset}
-									onGifSizePresetChange={setGifSizePreset}
-									gifOutputDimensions={calculateOutputDimensions(
-										videoPlaybackRef.current?.video?.videoWidth || 1920,
-										videoPlaybackRef.current?.video?.videoHeight || 1080,
-										gifSizePreset,
-										GIF_SIZE_PRESETS,
-										aspectRatio === "native"
-											? getNativeAspectRatioValue(
-													videoPlaybackRef.current?.video?.videoWidth || 1920,
-													videoPlaybackRef.current?.video?.videoHeight || 1080,
-													cropRegion,
-												)
-											: getAspectRatioValue(aspectRatio),
+							{/* Right: SidePanel + TabRail */}
+							{activeTab && (
+								<SidePanel activeTab={activeTab} onClose={() => setActiveTab(null)}>
+									{activeTab === "visual" ? (
+										<SettingsPanel
+											selected={wallpaper}
+											onWallpaperChange={(w) => pushState({ wallpaper: w })}
+											selectedZoomDepth={
+												selectedZoomId
+													? zoomRegions.find((z) => z.id === selectedZoomId)?.depth
+													: null
+											}
+											onZoomDepthChange={(depth) => selectedZoomId && handleZoomDepthChange(depth)}
+											selectedZoomFocusMode={
+												selectedZoomId
+													? (zoomRegions.find((z) => z.id === selectedZoomId)?.focusMode ??
+														"manual")
+													: null
+											}
+											onZoomFocusModeChange={(mode) =>
+												selectedZoomId && handleZoomFocusModeChange(mode)
+											}
+											hasCursorTelemetry={cursorTelemetry.length > 0}
+											selectedZoomId={selectedZoomId}
+											onZoomDelete={handleZoomDelete}
+											selectedTrimId={selectedTrimId}
+											onTrimDelete={handleTrimDelete}
+											shadowIntensity={shadowIntensity}
+											onShadowChange={(v) => updateState({ shadowIntensity: v })}
+											onShadowCommit={commitState}
+											showBlur={showBlur}
+											onBlurChange={(v) => pushState({ showBlur: v })}
+											motionBlurAmount={motionBlurAmount}
+											onMotionBlurChange={(v) => updateState({ motionBlurAmount: v })}
+											onMotionBlurCommit={commitState}
+											borderRadius={borderRadius}
+											onBorderRadiusChange={(v) => updateState({ borderRadius: v })}
+											onBorderRadiusCommit={commitState}
+											padding={padding}
+											onPaddingChange={(v) => updateState({ padding: v })}
+											onPaddingCommit={commitState}
+											cropRegion={cropRegion}
+											onCropChange={(r) => pushState({ cropRegion: r })}
+											aspectRatio={aspectRatio}
+											hasWebcam={Boolean(webcamVideoPath)}
+											webcamLayoutPreset={webcamLayoutPreset}
+											onWebcamLayoutPresetChange={(preset) =>
+												pushState({
+													webcamLayoutPreset: preset,
+													webcamPosition: preset === "picture-in-picture" ? webcamPosition : null,
+												})
+											}
+											webcamMaskShape={webcamMaskShape}
+											onWebcamMaskShapeChange={(shape) => pushState({ webcamMaskShape: shape })}
+											webcamSizePreset={webcamSizePreset}
+											onWebcamSizePresetChange={(v) => updateState({ webcamSizePreset: v })}
+											onWebcamSizePresetCommit={commitState}
+											videoElement={videoPlaybackRef.current?.video || null}
+											exportQuality={exportQuality}
+											onExportQualityChange={setExportQuality}
+											exportFormat={exportFormat}
+											onExportFormatChange={setExportFormat}
+											gifFrameRate={gifFrameRate}
+											onGifFrameRateChange={setGifFrameRate}
+											gifLoop={gifLoop}
+											onGifLoopChange={setGifLoop}
+											gifSizePreset={gifSizePreset}
+											onGifSizePresetChange={setGifSizePreset}
+											gifOutputDimensions={calculateOutputDimensions(
+												videoPlaybackRef.current?.video?.videoWidth || 1920,
+												videoPlaybackRef.current?.video?.videoHeight || 1080,
+												gifSizePreset,
+												GIF_SIZE_PRESETS,
+												aspectRatio === "native"
+													? getNativeAspectRatioValue(
+															videoPlaybackRef.current?.video?.videoWidth || 1920,
+															videoPlaybackRef.current?.video?.videoHeight || 1080,
+															cropRegion,
+														)
+													: getAspectRatioValue(aspectRatio),
+											)}
+											onExport={handleOpenExportDialog}
+											selectedAnnotationId={selectedAnnotationId}
+											annotationRegions={annotationOnlyRegions}
+											onAnnotationContentChange={handleAnnotationContentChange}
+											onAnnotationTypeChange={handleAnnotationTypeChange}
+											onAnnotationStyleChange={handleAnnotationStyleChange}
+											onAnnotationFigureDataChange={handleAnnotationFigureDataChange}
+											onAnnotationDuplicate={handleAnnotationDuplicate}
+											onAnnotationDelete={handleAnnotationDelete}
+											selectedBlurId={selectedBlurId}
+											blurRegions={blurRegions}
+											onBlurDataChange={handleBlurDataPanelChange}
+											onBlurDataCommit={commitState}
+											onBlurDelete={handleAnnotationDelete}
+											selectedSpeedId={selectedSpeedId}
+											selectedSpeedValue={
+												selectedSpeedId
+													? (speedRegions.find((r) => r.id === selectedSpeedId)?.speed ?? null)
+													: null
+											}
+											onSpeedChange={handleSpeedChange}
+											onSpeedDelete={handleSpeedDelete}
+											unsavedExport={unsavedExport}
+											onSaveUnsavedExport={handleSaveUnsavedExport}
+										/>
+									) : (
+										<div className="text-white/30 text-sm text-center py-8">Coming soon</div>
 									)}
-									onExport={handleOpenExportDialog}
-									selectedAnnotationId={selectedAnnotationId}
-									annotationRegions={annotationOnlyRegions}
-									onAnnotationContentChange={handleAnnotationContentChange}
-									onAnnotationTypeChange={handleAnnotationTypeChange}
-									onAnnotationStyleChange={handleAnnotationStyleChange}
-									onAnnotationFigureDataChange={handleAnnotationFigureDataChange}
-									onAnnotationDuplicate={handleAnnotationDuplicate}
-									onAnnotationDelete={handleAnnotationDelete}
-									selectedBlurId={selectedBlurId}
-									blurRegions={blurRegions}
-									onBlurDataChange={handleBlurDataPanelChange}
-									onBlurDataCommit={commitState}
-									onBlurDelete={handleAnnotationDelete}
-									selectedSpeedId={selectedSpeedId}
-									selectedSpeedValue={
-										selectedSpeedId
-											? (speedRegions.find((r) => r.id === selectedSpeedId)?.speed ?? null)
-											: null
-									}
-									onSpeedChange={handleSpeedChange}
-									onSpeedDelete={handleSpeedDelete}
-									unsavedExport={unsavedExport}
-									onSaveUnsavedExport={handleSaveUnsavedExport}
-								/>
-							</div>
+								</SidePanel>
+							)}
+							<TabRail activeTab={activeTab} onSelect={setActiveTab} />
 						</div>
 					</Panel>
 
