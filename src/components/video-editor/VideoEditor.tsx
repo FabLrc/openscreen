@@ -37,6 +37,11 @@ import {
 } from "@/utils/aspectRatioUtils";
 import { ExportDialog } from "./ExportDialog";
 import PlaybackControls from "./PlaybackControls";
+import PanelAudio from "./panels/PanelAudio";
+import PanelBackground from "./panels/PanelBackground";
+import PanelEdit from "./panels/PanelEdit";
+import PanelOverlay from "./panels/PanelOverlay";
+import PanelVisual from "./panels/PanelVisual";
 import {
 	createProjectData,
 	createProjectSnapshot,
@@ -48,7 +53,6 @@ import {
 	toFileUrl,
 	validateProjectData,
 } from "./projectPersistence";
-import { SettingsPanel } from "./SettingsPanel";
 import SidePanel from "./SidePanel";
 import TabRail from "./TabRail";
 import Titlebar from "./Titlebar";
@@ -141,7 +145,8 @@ export default function VideoEditor() {
 	const [gifSizePreset, setGifSizePreset] = useState<GifSizePreset>("medium");
 	const [exportedFilePath, setExportedFilePath] = useState<string | null>(null);
 	const [lastSavedSnapshot, setLastSavedSnapshot] = useState<string | null>(null);
-	const [unsavedExport, setUnsavedExport] = useState<{
+
+	const [_unsavedExport, setUnsavedExport] = useState<{
 		arrayBuffer: ArrayBuffer;
 		fileName: string;
 		format: string;
@@ -1305,27 +1310,6 @@ export default function VideoEditor() {
 		[handleShowExportedFile, t, rawT],
 	);
 
-	const handleSaveUnsavedExport = useCallback(async () => {
-		if (!unsavedExport) return;
-		try {
-			const saveResult = await window.electronAPI.saveExportedVideo(
-				unsavedExport.arrayBuffer,
-				unsavedExport.fileName,
-			);
-			if (saveResult.canceled) {
-				toast.info("Export canceled");
-			} else if (saveResult.success && saveResult.path) {
-				setUnsavedExport(null);
-				handleExportSaved(unsavedExport.format === "gif" ? "GIF" : "Video", saveResult.path);
-			} else {
-				toast.error(saveResult.message || "Failed to save export");
-			}
-		} catch (error) {
-			console.error("Error saving unsaved export:", error);
-			toast.error("Failed to save exported video");
-		}
-	}, [unsavedExport, handleExportSaved]);
-
 	const handleExport = useCallback(
 		async (settings: ExportSettings) => {
 			if (!videoPath) {
@@ -1853,9 +1837,7 @@ export default function VideoEditor() {
 							{activeTab && (
 								<SidePanel activeTab={activeTab} onClose={() => setActiveTab(null)}>
 									{activeTab === "visual" ? (
-										<SettingsPanel
-											selected={wallpaper}
-											onWallpaperChange={(w) => pushState({ wallpaper: w })}
+										<PanelVisual
 											selectedZoomDepth={
 												selectedZoomId
 													? zoomRegions.find((z) => z.id === selectedZoomId)?.depth
@@ -1876,23 +1858,38 @@ export default function VideoEditor() {
 											onZoomDelete={handleZoomDelete}
 											selectedTrimId={selectedTrimId}
 											onTrimDelete={handleTrimDelete}
-											shadowIntensity={shadowIntensity}
-											onShadowChange={(v) => updateState({ shadowIntensity: v })}
-											onShadowCommit={commitState}
+											selectedSpeedId={selectedSpeedId}
+											selectedSpeedValue={
+												selectedSpeedId
+													? (speedRegions.find((r) => r.id === selectedSpeedId)?.speed ?? null)
+													: null
+											}
+											onSpeedChange={handleSpeedChange}
+											onSpeedDelete={handleSpeedDelete}
 											showBlur={showBlur}
 											onBlurChange={(v) => pushState({ showBlur: v })}
 											motionBlurAmount={motionBlurAmount}
 											onMotionBlurChange={(v) => updateState({ motionBlurAmount: v })}
 											onMotionBlurCommit={commitState}
+											shadowIntensity={shadowIntensity}
+											onShadowChange={(v) => updateState({ shadowIntensity: v })}
+											onShadowCommit={commitState}
 											borderRadius={borderRadius}
 											onBorderRadiusChange={(v) => updateState({ borderRadius: v })}
 											onBorderRadiusCommit={commitState}
 											padding={padding}
 											onPaddingChange={(v) => updateState({ padding: v })}
 											onPaddingCommit={commitState}
-											cropRegion={cropRegion}
-											onCropChange={(r) => pushState({ cropRegion: r })}
-											aspectRatio={aspectRatio}
+										/>
+									) : activeTab === "bg" ? (
+										<PanelBackground
+											selected={wallpaper}
+											onWallpaperChange={(w) => pushState({ wallpaper: w })}
+										/>
+									) : activeTab === "audio" ? (
+										<PanelAudio hasWebcam={Boolean(webcamVideoPath)} />
+									) : activeTab === "overlay" ? (
+										<PanelOverlay
 											hasWebcam={Boolean(webcamVideoPath)}
 											webcamLayoutPreset={webcamLayoutPreset}
 											onWebcamLayoutPresetChange={(preset) =>
@@ -1906,31 +1903,7 @@ export default function VideoEditor() {
 											webcamSizePreset={webcamSizePreset}
 											onWebcamSizePresetChange={(v) => updateState({ webcamSizePreset: v })}
 											onWebcamSizePresetCommit={commitState}
-											videoElement={videoPlaybackRef.current?.video || null}
-											exportQuality={exportQuality}
-											onExportQualityChange={setExportQuality}
-											exportFormat={exportFormat}
-											onExportFormatChange={setExportFormat}
-											gifFrameRate={gifFrameRate}
-											onGifFrameRateChange={setGifFrameRate}
-											gifLoop={gifLoop}
-											onGifLoopChange={setGifLoop}
-											gifSizePreset={gifSizePreset}
-											onGifSizePresetChange={setGifSizePreset}
-											gifOutputDimensions={calculateOutputDimensions(
-												videoPlaybackRef.current?.video?.videoWidth || 1920,
-												videoPlaybackRef.current?.video?.videoHeight || 1080,
-												gifSizePreset,
-												GIF_SIZE_PRESETS,
-												aspectRatio === "native"
-													? getNativeAspectRatioValue(
-															videoPlaybackRef.current?.video?.videoWidth || 1920,
-															videoPlaybackRef.current?.video?.videoHeight || 1080,
-															cropRegion,
-														)
-													: getAspectRatioValue(aspectRatio),
-											)}
-											onExport={handleOpenExportDialog}
+											aspectRatio={aspectRatio}
 											selectedAnnotationId={selectedAnnotationId}
 											annotationRegions={annotationOnlyRegions}
 											onAnnotationContentChange={handleAnnotationContentChange}
@@ -1944,20 +1917,10 @@ export default function VideoEditor() {
 											onBlurDataChange={handleBlurDataPanelChange}
 											onBlurDataCommit={commitState}
 											onBlurDelete={handleAnnotationDelete}
-											selectedSpeedId={selectedSpeedId}
-											selectedSpeedValue={
-												selectedSpeedId
-													? (speedRegions.find((r) => r.id === selectedSpeedId)?.speed ?? null)
-													: null
-											}
-											onSpeedChange={handleSpeedChange}
-											onSpeedDelete={handleSpeedDelete}
-											unsavedExport={unsavedExport}
-											onSaveUnsavedExport={handleSaveUnsavedExport}
 										/>
-									) : (
-										<div className="text-white/30 text-sm text-center py-8">Coming soon</div>
-									)}
+									) : activeTab === "edit" ? (
+										<PanelEdit selectedTrimId={selectedTrimId} onTrimDelete={handleTrimDelete} />
+									) : null}
 								</SidePanel>
 							)}
 							<TabRail activeTab={activeTab} onSelect={setActiveTab} />
