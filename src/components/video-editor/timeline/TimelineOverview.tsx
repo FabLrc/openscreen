@@ -1,6 +1,7 @@
-import type { Span } from "dnd-timeline";
+import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useCallback, useRef } from "react";
 
 interface OverviewRegion {
 	id: string;
@@ -15,6 +16,7 @@ interface TimelineOverviewProps {
 	viewportStartMs: number;
 	viewportEndMs: number;
 	onSeek?: (time: number) => void;
+	onRangeChange?: Dispatch<SetStateAction<Range>>;
 	children?: ReactNode;
 }
 
@@ -38,9 +40,56 @@ export default function TimelineOverview({
 	viewportStartMs,
 	viewportEndMs,
 	onSeek,
+	onRangeChange,
 	children,
 }: TimelineOverviewProps) {
 	const { sidebarWidth } = useTimelineContext();
+
+	// Viewport drag state
+	const dragState = useRef<{
+		startX: number;
+		startMs: number;
+		viewportSpanMs: number;
+		trackWidth: number;
+	} | null>(null);
+
+	const handleViewportMouseDown = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			if (!onRangeChange || videoDurationMs <= 0) return;
+			e.stopPropagation();
+			e.preventDefault();
+			const track = e.currentTarget.parentElement;
+			if (!track) return;
+			const trackWidth = track.getBoundingClientRect().width;
+			dragState.current = {
+				startX: e.clientX,
+				startMs: viewportStartMs,
+				viewportSpanMs: viewportEndMs - viewportStartMs,
+				trackWidth,
+			};
+
+			function onMouseMove(ev: MouseEvent) {
+				if (!dragState.current || !onRangeChange) return;
+				const { startX, startMs, viewportSpanMs, trackWidth } = dragState.current;
+				const deltaX = ev.clientX - startX;
+				const deltaMs = (deltaX / trackWidth) * videoDurationMs;
+				const newStart = Math.max(0, Math.min(startMs + deltaMs, videoDurationMs - viewportSpanMs));
+				const newEnd = newStart + viewportSpanMs;
+				onRangeChange(() => ({ start: newStart, end: newEnd }));
+			}
+
+			function onMouseUp() {
+				dragState.current = null;
+				window.removeEventListener("mousemove", onMouseMove);
+				window.removeEventListener("mouseup", onMouseUp);
+			}
+
+			window.addEventListener("mousemove", onMouseMove);
+			window.addEventListener("mouseup", onMouseUp);
+		},
+		[onRangeChange, videoDurationMs, viewportStartMs, viewportEndMs],
+	);
+
 	function handleClick(e: React.MouseEvent<HTMLDivElement>) {
 		if (!onSeek || videoDurationMs <= 0) return;
 		const rect = e.currentTarget.getBoundingClientRect();
@@ -95,13 +144,14 @@ export default function TimelineOverview({
 					);
 				})}
 
-				{/* Viewport indicator */}
+				{/* Viewport indicator — draggable */}
 				<div
-					className="absolute top-0 bottom-0 border border-white/30 bg-white/[0.03] rounded-sm pointer-events-none"
+					className="absolute top-0 bottom-0 border border-white/30 bg-white/[0.06] rounded-sm cursor-grab active:cursor-grabbing hover:bg-white/[0.10] transition-colors"
 					style={{
 						left: viewportLeft,
 						width: viewportWidth,
 					}}
+					onMouseDown={handleViewportMouseDown}
 				/>
 
 				{/* Playhead */}

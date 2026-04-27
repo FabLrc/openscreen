@@ -1,6 +1,15 @@
 import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
-import { Check, ChevronDown, Plus, ZoomIn } from "lucide-react";
+import {
+	Check,
+	ChevronDown,
+	Gauge,
+	Layers,
+	MessageSquare,
+	Plus,
+	Scissors,
+	ZoomIn,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -653,7 +662,13 @@ function Timeline({
 				keyframes={keyframes}
 			/>
 
-			<Row id={ZOOM_ROW_ID} isEmpty={zoomItems.length === 0} hint={t("hints.pressZoom")}>
+			<Row
+				id={ZOOM_ROW_ID}
+				isEmpty={zoomItems.length === 0}
+				hint={t("hints.pressZoom")}
+				variant="zoom"
+				icon={<ZoomIn size={13} strokeWidth={1.8} />}
+			>
 				{zoomItems.map((item) => (
 					<Item
 						id={item.id}
@@ -671,7 +686,13 @@ function Timeline({
 				))}
 			</Row>
 
-			<Row id={TRIM_ROW_ID} isEmpty={trimItems.length === 0} hint={t("hints.pressTrim")}>
+			<Row
+				id={TRIM_ROW_ID}
+				isEmpty={trimItems.length === 0}
+				hint={t("hints.pressTrim")}
+				variant="trim"
+				icon={<Scissors size={13} strokeWidth={1.8} />}
+			>
 				{trimItems.map((item) => (
 					<Item
 						id={item.id}
@@ -691,6 +712,8 @@ function Timeline({
 				id={ANNOTATION_ROW_ID}
 				isEmpty={annotationItems.length === 0}
 				hint={t("hints.pressAnnotation")}
+				variant="annotation"
+				icon={<MessageSquare size={13} strokeWidth={1.8} />}
 			>
 				{annotationItems.map((item) => (
 					<Item
@@ -707,7 +730,13 @@ function Timeline({
 				))}
 			</Row>
 
-			<Row id={BLUR_ROW_ID} isEmpty={blurItems.length === 0} hint={t("hints.pressBlur")}>
+			<Row
+				id={BLUR_ROW_ID}
+				isEmpty={blurItems.length === 0}
+				hint={t("hints.pressBlur")}
+				variant="blur"
+				icon={<Layers size={13} strokeWidth={1.8} />}
+			>
 				{blurItems.map((item) => (
 					<Item
 						id={item.id}
@@ -723,7 +752,13 @@ function Timeline({
 				))}
 			</Row>
 
-			<Row id={SPEED_ROW_ID} isEmpty={speedItems.length === 0} hint={t("hints.pressSpeed")}>
+			<Row
+				id={SPEED_ROW_ID}
+				isEmpty={speedItems.length === 0}
+				hint={t("hints.pressSpeed")}
+				variant="speed"
+				icon={<Gauge size={13} strokeWidth={1.8} />}
+			>
 				{speedItems.map((item) => (
 					<Item
 						id={item.id}
@@ -1317,7 +1352,7 @@ export default function TimelineEditor({
 
 	return (
 		<div className="flex-1 flex flex-col bg-[#06060b] overflow-hidden">
-			<div className="flex items-center gap-2 px-4 py-2 border-b border-white/5 bg-[#06060b]">
+			<div className="flex items-center gap-2 px-3 py-1.5 border-b border-white/[0.05] bg-black/20 flex-shrink-0">
 				<div className="flex items-center gap-2">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -1394,7 +1429,7 @@ export default function TimelineEditor({
 			</div>
 			<div
 				ref={timelineContainerRef}
-				className="flex-1 overflow-hidden bg-[#06060b] relative"
+				className="flex-1 overflow-hidden bg-[#06060b] relative flex flex-col"
 				onClick={() => setSelectedKeyframeId(null)}
 			>
 				<TimelineWrapper
@@ -1408,6 +1443,7 @@ export default function TimelineEditor({
 					allRegionSpans={allRegionSpans}
 				>
 					<TimelineOverview
+						onRangeChange={setRange}
 						regions={[
 							...zoomRegions.map((r) => ({
 								id: r.id,
@@ -1468,6 +1504,11 @@ export default function TimelineEditor({
 						keyframes={keyframes}
 					/>
 				</TimelineWrapper>
+				{/* Filler extends grid visually to fill panel when taller than rows */}
+				<div
+					className="flex-1 bg-[#06060b] bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px)] bg-[length:20px_100%]"
+					style={{ marginLeft: 52 }}
+				/>
 			</div>
 		</div>
 	);

@@ -1,7 +1,6 @@
 import type { Span } from "dnd-timeline";
 import { useItem } from "dnd-timeline";
 import { Gauge, MessageSquare, MousePointer2, Scissors, ZoomIn } from "lucide-react";
-import { useMemo } from "react";
 import { useScopedT } from "@/contexts/I18nContext";
 import { cn } from "@/lib/utils";
 import glassStyles from "./ItemGlass.module.css";
@@ -28,16 +27,6 @@ const ZOOM_LABELS: Record<number, string> = {
 	5: "3.5×",
 	6: "5×",
 };
-
-function formatMs(ms: number): string {
-	const totalSeconds = ms / 1000;
-	const minutes = Math.floor(totalSeconds / 60);
-	const seconds = totalSeconds % 60;
-	if (minutes > 0) {
-		return `${minutes}:${seconds.toFixed(1).padStart(4, "0")}`;
-	}
-	return `${seconds.toFixed(1)}s`;
-}
 
 export default function Item({
 	id,
@@ -71,11 +60,6 @@ export default function Item({
 				: glassStyles.glassYellow;
 
 	const endCapColor = isZoom ? "#21916A" : isTrim ? "#ef4444" : isSpeed ? "#d97706" : "#B4A046";
-
-	const timeLabel = useMemo(
-		() => `${formatMs(span.start)} – ${formatMs(span.end)}`,
-		[span.start, span.end],
-	);
 
 	// Minimum clickable width on the outer wrapper.
 	// Kept small (6px) so items visually distinguish their real positions;
@@ -166,13 +150,6 @@ export default function Item({
 								</>
 							)}
 						</div>
-						<span
-							className={`text-[9px] tabular-nums tracking-tight whitespace-nowrap transition-opacity ${
-								isSelected ? "opacity-60" : "opacity-0 group-hover:opacity-40"
-							}`}
-						>
-							{timeLabel}
-						</span>
 					</div>
 				</div>
 			</div>

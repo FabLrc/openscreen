@@ -302,6 +302,7 @@ export default function TimelineWrapper({
 			onDragMove={onDragMove}
 			onDragEnd={onDragEndWithTooltip}
 			autoScroll={{ enabled: false }}
+			sidebarWidth={52}
 		>
 			<div className="relative">
 				{children}
