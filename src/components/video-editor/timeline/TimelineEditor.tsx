@@ -1,15 +1,6 @@
 import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
-import {
-	Check,
-	ChevronDown,
-	Gauge,
-	MessageSquare,
-	Plus,
-	Scissors,
-	WandSparkles,
-	ZoomIn,
-} from "lucide-react";
+import { Check, ChevronDown, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -27,19 +18,11 @@ import { cn } from "@/lib/utils";
 import { ASPECT_RATIOS, type AspectRatio, getAspectRatioLabel } from "@/utils/aspectRatioUtils";
 import { formatShortcut } from "@/utils/platformUtils";
 import { TutorialHelp } from "../TutorialHelp";
-import type {
-	AnnotationRegion,
-	CursorTelemetryPoint,
-	SpeedRegion,
-	TrimRegion,
-	ZoomFocus,
-	ZoomRegion,
-} from "../types";
+import type { AnnotationRegion, SpeedRegion, TrimRegion, ZoomRegion } from "../types";
 import Item from "./Item";
 import KeyframeMarkers from "./KeyframeMarkers";
 import Row from "./Row";
 import TimelineWrapper from "./TimelineWrapper";
-import { detectZoomDwellCandidates, normalizeCursorTelemetry } from "./zoomSuggestionUtils";
 
 const ZOOM_ROW_ID = "row-zoom";
 const TRIM_ROW_ID = "row-trim";
@@ -48,16 +31,13 @@ const BLUR_ROW_ID = "row-blur";
 const SPEED_ROW_ID = "row-speed";
 const FALLBACK_RANGE_MS = 1000;
 const TARGET_MARKER_COUNT = 12;
-const SUGGESTION_SPACING_MS = 1800;
 
 interface TimelineEditorProps {
 	videoDuration: number;
 	currentTime: number;
 	onSeek?: (time: number) => void;
-	cursorTelemetry?: CursorTelemetryPoint[];
 	zoomRegions: ZoomRegion[];
 	onZoomAdded: (span: Span) => void;
-	onZoomSuggested?: (span: Span, focus: ZoomFocus) => void;
 	onZoomSpanChange: (id: string, span: Span) => void;
 	onZoomDelete: (id: string) => void;
 	selectedZoomId: string | null;
@@ -767,10 +747,8 @@ export default function TimelineEditor({
 	videoDuration,
 	currentTime,
 	onSeek,
-	cursorTelemetry = [],
 	zoomRegions,
 	onZoomAdded,
-	onZoomSuggested,
 	onZoomSpanChange,
 	onZoomDelete,
 	selectedZoomId,
@@ -1023,103 +1001,6 @@ export default function TimelineEditor({
 		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
 		onZoomAdded({ start: startPos, end: startPos + actualDuration });
 	}, [videoDuration, totalMs, currentTimeMs, zoomRegions, onZoomAdded, defaultRegionDurationMs, t]);
-
-	const handleSuggestZooms = useCallback(() => {
-		if (!videoDuration || videoDuration === 0 || totalMs === 0) {
-			return;
-		}
-
-		if (!onZoomSuggested) {
-			toast.error(t("errors.zoomSuggestionUnavailable"));
-			return;
-		}
-
-		if (cursorTelemetry.length < 2) {
-			toast.info(t("errors.noCursorTelemetry"), {
-				description: t("errors.noCursorTelemetryDescription"),
-			});
-			return;
-		}
-
-		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
-		if (defaultDuration <= 0) {
-			return;
-		}
-
-		const reservedSpans = [...zoomRegions]
-			.map((region) => ({ start: region.startMs, end: region.endMs }))
-			.sort((a, b) => a.start - b.start);
-
-		const normalizedSamples = normalizeCursorTelemetry(cursorTelemetry, totalMs);
-
-		if (normalizedSamples.length < 2) {
-			toast.info(t("errors.noUsableTelemetry"), {
-				description: t("errors.noUsableTelemetryDescription"),
-			});
-			return;
-		}
-
-		const dwellCandidates = detectZoomDwellCandidates(normalizedSamples);
-
-		if (dwellCandidates.length === 0) {
-			toast.info(t("errors.noDwellMoments"), {
-				description: t("errors.noDwellMomentsDescription"),
-			});
-			return;
-		}
-
-		const sortedCandidates = [...dwellCandidates].sort((a, b) => b.strength - a.strength);
-		const acceptedCenters: number[] = [];
-
-		let addedCount = 0;
-
-		sortedCandidates.forEach((candidate) => {
-			const tooCloseToAccepted = acceptedCenters.some(
-				(center) => Math.abs(center - candidate.centerTimeMs) < SUGGESTION_SPACING_MS,
-			);
-
-			if (tooCloseToAccepted) {
-				return;
-			}
-
-			const centeredStart = Math.round(candidate.centerTimeMs - defaultDuration / 2);
-			const candidateStart = Math.max(0, Math.min(centeredStart, totalMs - defaultDuration));
-			const candidateEnd = candidateStart + defaultDuration;
-			const hasOverlap = reservedSpans.some(
-				(span) => candidateEnd > span.start && candidateStart < span.end,
-			);
-
-			if (hasOverlap) {
-				return;
-			}
-
-			reservedSpans.push({ start: candidateStart, end: candidateEnd });
-			acceptedCenters.push(candidate.centerTimeMs);
-			onZoomSuggested({ start: candidateStart, end: candidateEnd }, candidate.focus);
-			addedCount += 1;
-		});
-
-		if (addedCount === 0) {
-			toast.info(t("errors.noAutoZoomSlots"), {
-				description: t("errors.noAutoZoomSlotsDescription"),
-			});
-			return;
-		}
-
-		toast.success(
-			addedCount === 1
-				? t("success.addedZoomSuggestions", { count: String(addedCount) })
-				: t("success.addedZoomSuggestionsPlural", { count: String(addedCount) }),
-		);
-	}, [
-		videoDuration,
-		totalMs,
-		defaultRegionDurationMs,
-		zoomRegions,
-		onZoomSuggested,
-		cursorTelemetry,
-		t,
-	]);
 
 	const handleAddTrim = useCallback(() => {
 		if (!videoDuration || videoDuration === 0 || totalMs === 0 || !onTrimAdded) {
@@ -1447,72 +1328,6 @@ export default function TimelineEditor({
 	return (
 		<div className="flex-1 flex flex-col bg-[#09090b] overflow-hidden">
 			<div className="flex items-center gap-2 px-4 py-2 border-b border-white/5 bg-[#09090b]">
-				<div className="flex items-center gap-1">
-					<Button
-						onClick={handleAddZoom}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#34B27B] hover:bg-[#34B27B]/10 transition-all"
-						title={t("buttons.addZoom")}
-					>
-						<ZoomIn className="w-4 h-4" />
-					</Button>
-					<Button
-						onClick={handleSuggestZooms}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#34B27B] hover:bg-[#34B27B]/10 transition-all"
-						title={t("buttons.suggestZooms")}
-					>
-						<WandSparkles className="w-4 h-4" />
-					</Button>
-					<Button
-						onClick={handleAddTrim}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-all"
-						title={t("buttons.addTrim")}
-					>
-						<Scissors className="w-4 h-4" />
-					</Button>
-					<Button
-						onClick={handleAddAnnotation}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#B4A046] hover:bg-[#B4A046]/10 transition-all"
-						title={t("buttons.addAnnotation")}
-					>
-						<MessageSquare className="w-4 h-4" />
-					</Button>
-					<Button
-						onClick={handleAddBlur}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#7dd3fc] hover:bg-[#7dd3fc]/10 transition-all"
-						title={t("buttons.addBlur")}
-					>
-						<svg
-							className="w-4 h-4"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						>
-							<circle cx="8" cy="12" r="3" />
-							<circle cx="16" cy="12" r="3" />
-							<path d="M6 6h12M6 18h12" />
-						</svg>
-					</Button>
-					<Button
-						onClick={handleAddSpeed}
-						variant="ghost"
-						size="icon"
-						className="h-7 w-7 text-slate-400 hover:text-[#d97706] hover:bg-[#d97706]/10 transition-all"
-						title={t("buttons.addSpeed")}
-					>
-						<Gauge className="w-4 h-4" />
-					</Button>
-				</div>
 				<div className="flex items-center gap-2">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>

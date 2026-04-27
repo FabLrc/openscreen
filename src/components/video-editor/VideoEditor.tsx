@@ -36,7 +36,7 @@ import {
 	isPortraitAspectRatio,
 } from "@/utils/aspectRatioUtils";
 import { ExportDialog } from "./ExportDialog";
-import PlaybackControls from "./PlaybackControls";
+import PlaybackBar from "./PlaybackBar";
 import PanelAudio from "./panels/PanelAudio";
 import PanelBackground from "./panels/PanelBackground";
 import PanelEdit from "./panels/PanelEdit";
@@ -57,6 +57,10 @@ import SidePanel from "./SidePanel";
 import TabRail from "./TabRail";
 import Titlebar from "./Titlebar";
 import TimelineEditor from "./timeline/TimelineEditor";
+import {
+	detectZoomDwellCandidates,
+	normalizeCursorTelemetry,
+} from "./timeline/zoomSuggestionUtils";
 import {
 	type AnnotationRegion,
 	type BlurData,
@@ -164,6 +168,7 @@ export default function VideoEditor() {
 	const { locale, setLocale, t: rawT } = useI18n();
 	const t = useScopedT("editor");
 	const ts = useScopedT("settings");
+	const tTimeline = useScopedT("timeline");
 
 	const nextAnnotationIdRef = useRef(1);
 	const nextAnnotationZIndexRef = useRef(1);
@@ -176,6 +181,13 @@ export default function VideoEditor() {
 	const blurRegions = useMemo(
 		() => annotationRegions.filter((region) => region.type === "blur"),
 		[annotationRegions],
+	);
+
+	const totalMs = useMemo(() => Math.max(0, Math.round(duration * 1000)), [duration]);
+	const currentTimeMs = useMemo(() => Math.round(currentTime * 1000), [currentTime]);
+	const defaultRegionDurationMs = useMemo(
+		() => Math.max(1000, Math.round(totalMs * 0.05)),
+		[totalMs],
 	);
 
 	const currentProjectMedia = useMemo<ProjectMedia | null>(() => {
@@ -648,6 +660,18 @@ export default function VideoEditor() {
 		video.currentTime = time;
 	}
 
+	function handleStepBackward() {
+		const video = videoPlaybackRef.current?.video;
+		if (!video || !Number.isFinite(video.duration)) return;
+		video.currentTime = computeFrameStepTime(video.currentTime, video.duration, "backward");
+	}
+
+	function handleStepForward() {
+		const video = videoPlaybackRef.current?.video;
+		if (!video || !Number.isFinite(video.duration)) return;
+		video.currentTime = computeFrameStepTime(video.currentTime, video.duration, "forward");
+	}
+
 	const handleSelectZoom = useCallback((id: string | null) => {
 		setSelectedZoomId(id);
 		if (id) {
@@ -965,6 +989,180 @@ export default function VideoEditor() {
 		},
 		[pushState],
 	);
+
+	const handleAddZoomFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const sorted = [...zoomRegions].sort((a, b) => a.startMs - b.startMs);
+		const nextRegion = sorted.find((region) => region.startMs > startPos);
+		const gapToNext = nextRegion ? nextRegion.startMs - startPos : totalMs - startPos;
+		const isOverlapping = sorted.some(
+			(region) => startPos >= region.startMs && startPos < region.endMs,
+		);
+		if (isOverlapping || gapToNext <= 0) {
+			toast.error(tTimeline("errors.cannotPlaceZoom"), {
+				description: tTimeline("errors.zoomExistsAtLocation"),
+			});
+			return;
+		}
+		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
+		handleZoomAdded({ start: startPos, end: startPos + actualDuration });
+	}, [
+		duration,
+		totalMs,
+		currentTimeMs,
+		zoomRegions,
+		defaultRegionDurationMs,
+		tTimeline,
+		handleZoomAdded,
+	]);
+
+	const handleSuggestZoomsFromBar = useCallback(async () => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		if (cursorTelemetry.length < 2) {
+			toast.info(tTimeline("errors.noCursorTelemetry"), {
+				description: tTimeline("errors.noCursorTelemetryDescription"),
+			});
+			return;
+		}
+		const reservedSpans = [...zoomRegions]
+			.map((region) => ({ start: region.startMs, end: region.endMs }))
+			.sort((a, b) => a.start - b.start);
+		const normalizedSamples = normalizeCursorTelemetry(cursorTelemetry, totalMs);
+		if (normalizedSamples.length < 2) {
+			toast.info(tTimeline("errors.noUsableTelemetry"), {
+				description: tTimeline("errors.noUsableTelemetryDescription"),
+			});
+			return;
+		}
+		const dwellCandidates = detectZoomDwellCandidates(normalizedSamples);
+		if (dwellCandidates.length === 0) {
+			toast.info(tTimeline("errors.noDwellMoments"), {
+				description: tTimeline("errors.noDwellMomentsDescription"),
+			});
+			return;
+		}
+		const SUGGESTION_SPACING_MS = 1800;
+		const sortedCandidates = [...dwellCandidates].sort((a, b) => b.strength - a.strength);
+		const acceptedCenters: number[] = [];
+		let addedCount = 0;
+		sortedCandidates.forEach((candidate) => {
+			const tooCloseToAccepted = acceptedCenters.some(
+				(center) => Math.abs(center - candidate.centerTimeMs) < SUGGESTION_SPACING_MS,
+			);
+			if (tooCloseToAccepted) return;
+			const centeredStart = Math.round(candidate.centerTimeMs - defaultDuration / 2);
+			const candidateStart = Math.max(0, Math.min(centeredStart, totalMs - defaultDuration));
+			const candidateEnd = candidateStart + defaultDuration;
+			const hasOverlap = reservedSpans.some(
+				(span) => candidateEnd > span.start && candidateStart < span.end,
+			);
+			if (hasOverlap) return;
+			reservedSpans.push({ start: candidateStart, end: candidateEnd });
+			acceptedCenters.push(candidate.centerTimeMs);
+			handleZoomSuggested({ start: candidateStart, end: candidateEnd }, candidate.focus);
+			addedCount += 1;
+		});
+		if (addedCount === 0) {
+			toast.info(tTimeline("errors.noAutoZoomSlots"), {
+				description: tTimeline("errors.noAutoZoomSlotsDescription"),
+			});
+			return;
+		}
+		toast.success(
+			addedCount === 1
+				? tTimeline("success.addedZoomSuggestions", { count: String(addedCount) })
+				: tTimeline("success.addedZoomSuggestionsPlural", { count: String(addedCount) }),
+		);
+	}, [
+		duration,
+		totalMs,
+		defaultRegionDurationMs,
+		cursorTelemetry,
+		zoomRegions,
+		tTimeline,
+		handleZoomSuggested,
+	]);
+
+	const handleAddTrimFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const sorted = [...trimRegions].sort((a, b) => a.startMs - b.startMs);
+		const nextRegion = sorted.find((region) => region.startMs > startPos);
+		const gapToNext = nextRegion ? nextRegion.startMs - startPos : totalMs - startPos;
+		const isOverlapping = sorted.some(
+			(region) => startPos >= region.startMs && startPos < region.endMs,
+		);
+		if (isOverlapping || gapToNext <= 0) {
+			toast.error(tTimeline("errors.cannotPlaceTrim"), {
+				description: tTimeline("errors.trimExistsAtLocation"),
+			});
+			return;
+		}
+		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
+		handleTrimAdded({ start: startPos, end: startPos + actualDuration });
+	}, [
+		duration,
+		totalMs,
+		currentTimeMs,
+		trimRegions,
+		defaultRegionDurationMs,
+		tTimeline,
+		handleTrimAdded,
+	]);
+
+	const handleAddAnnotationFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const endPos = Math.min(startPos + defaultDuration, totalMs);
+		handleAnnotationAdded({ start: startPos, end: endPos });
+	}, [duration, totalMs, currentTimeMs, defaultRegionDurationMs, handleAnnotationAdded]);
+
+	const handleAddBlurFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const endPos = Math.min(startPos + defaultDuration, totalMs);
+		handleBlurAdded({ start: startPos, end: endPos });
+	}, [duration, totalMs, currentTimeMs, defaultRegionDurationMs, handleBlurAdded]);
+
+	const handleAddSpeedFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const sorted = [...speedRegions].sort((a, b) => a.startMs - b.startMs);
+		const nextRegion = sorted.find((region) => region.startMs > startPos);
+		const gapToNext = nextRegion ? nextRegion.startMs - startPos : totalMs - startPos;
+		const isOverlapping = sorted.some(
+			(region) => startPos >= region.startMs && startPos < region.endMs,
+		);
+		if (isOverlapping || gapToNext <= 0) {
+			toast.error(tTimeline("errors.cannotPlaceSpeed"), {
+				description: tTimeline("errors.speedExistsAtLocation"),
+			});
+			return;
+		}
+		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
+		handleSpeedAdded({ start: startPos, end: startPos + actualDuration });
+	}, [
+		duration,
+		totalMs,
+		currentTimeMs,
+		speedRegions,
+		defaultRegionDurationMs,
+		tTimeline,
+		handleSpeedAdded,
+	]);
 
 	const handleAnnotationSpanChange = useCallback(
 		(id: string, span: Span) => {
@@ -1816,20 +2014,24 @@ export default function VideoEditor() {
 											/>
 										</div>
 									</div>
-									{/* Playback controls */}
-									<div className="w-full flex justify-center items-center h-12 flex-shrink-0 px-3 py-1.5 my-1.5">
-										<div className="w-full max-w-[700px]">
-											<PlaybackControls
-												isPlaying={isPlaying}
-												currentTime={currentTime}
-												duration={duration}
-												isFullscreen={isFullscreen}
-												onToggleFullscreen={toggleFullscreen}
-												onTogglePlayPause={togglePlayPause}
-												onSeek={handleSeek}
-											/>
-										</div>
-									</div>
+									{/* Playback bar */}
+									<PlaybackBar
+										isPlaying={isPlaying}
+										currentTime={currentTime}
+										duration={duration}
+										isFullscreen={isFullscreen}
+										onToggleFullscreen={toggleFullscreen}
+										onTogglePlayPause={togglePlayPause}
+										onSeek={handleSeek}
+										onStepBackward={handleStepBackward}
+										onStepForward={handleStepForward}
+										onAddZoom={handleAddZoomFromBar}
+										onSuggestZooms={handleSuggestZoomsFromBar}
+										onAddTrim={handleAddTrimFromBar}
+										onAddAnnotation={handleAddAnnotationFromBar}
+										onAddBlur={handleAddBlurFromBar}
+										onAddSpeed={handleAddSpeedFromBar}
+									/>
 								</div>
 							</div>
 
@@ -1938,10 +2140,8 @@ export default function VideoEditor() {
 								videoDuration={duration}
 								currentTime={currentTime}
 								onSeek={handleSeek}
-								cursorTelemetry={cursorTelemetry}
 								zoomRegions={zoomRegions}
 								onZoomAdded={handleZoomAdded}
-								onZoomSuggested={handleZoomSuggested}
 								onZoomSpanChange={handleZoomSpanChange}
 								onZoomDelete={handleZoomDelete}
 								selectedZoomId={selectedZoomId}
