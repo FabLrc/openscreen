@@ -139,5 +139,7 @@ export function useEditorHistory(initial: EditorState = INITIAL_EDITOR_STATE) {
 		redo,
 		canUndo: history.past.length > 0,
 		canRedo: history.future.length > 0,
+		undoCount: history.past.length,
+		redoCount: history.future.length,
 	};
 }

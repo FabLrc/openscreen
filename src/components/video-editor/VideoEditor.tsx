@@ -1,5 +1,4 @@
 import type { Span } from "dnd-timeline";
-import { FolderOpen, Languages, Save, Video } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "sonner";
@@ -14,8 +13,6 @@ import {
 import { useI18n, useScopedT } from "@/contexts/I18nContext";
 import { useShortcuts } from "@/contexts/ShortcutsContext";
 import { INITIAL_EDITOR_STATE, useEditorHistory } from "@/hooks/useEditorHistory";
-import { type Locale } from "@/i18n/config";
-import { getAvailableLocales, getLocaleName } from "@/i18n/loader";
 import {
 	calculateOutputDimensions,
 	type ExportFormat,
@@ -52,6 +49,7 @@ import {
 	validateProjectData,
 } from "./projectPersistence";
 import { SettingsPanel } from "./SettingsPanel";
+import Titlebar from "./Titlebar";
 import TimelineEditor from "./timeline/TimelineEditor";
 import {
 	type AnnotationRegion,
@@ -84,6 +82,8 @@ export default function VideoEditor() {
 		commitState,
 		undo,
 		redo,
+		undoCount,
+		redoCount,
 	} = useEditorHistory(INITIAL_EDITOR_STATE);
 
 	const {
@@ -156,7 +156,6 @@ export default function VideoEditor() {
 	const { locale, setLocale, t: rawT } = useI18n();
 	const t = useScopedT("editor");
 	const ts = useScopedT("settings");
-	const availableLocales = getAvailableLocales();
 
 	const nextAnnotationIdRef = useRef(1);
 	const nextAnnotationZIndexRef = useRef(1);
@@ -1732,57 +1731,24 @@ export default function VideoEditor() {
 				</DialogContent>
 			</Dialog>
 
-			<div
-				className="h-10 flex-shrink-0 bg-[#09090b]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50"
-				style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
-			>
-				<div
-					className="flex-1 flex items-center gap-1"
-					style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-				>
-					<div
-						className={`flex items-center gap-1 px-2 py-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-all duration-150 ${isMac ? "ml-14" : "ml-2"}`}
-					>
-						<Languages size={14} />
-						<select
-							value={locale}
-							onChange={(e) => setLocale(e.target.value as Locale)}
-							className="bg-transparent text-[11px] font-medium outline-none cursor-pointer appearance-none pr-1"
-							style={{ color: "inherit" }}
-						>
-							{availableLocales.map((loc) => (
-								<option key={loc} value={loc} className="bg-[#09090b] text-white">
-									{getLocaleName(loc)}
-								</option>
-							))}
-						</select>
-					</div>
-					<button
-						type="button"
-						onClick={() => setShowNewRecordingDialog(true)}
-						className="flex items-center gap-1 px-2 py-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-all duration-150 text-[11px] font-medium"
-					>
-						<Video size={14} />
-						{t("newRecording.title")}
-					</button>
-					<button
-						type="button"
-						onClick={handleLoadProject}
-						className="flex items-center gap-1 px-2 py-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-all duration-150 text-[11px] font-medium"
-					>
-						<FolderOpen size={14} />
-						{ts("project.load")}
-					</button>
-					<button
-						type="button"
-						onClick={handleSaveProject}
-						className="flex items-center gap-1 px-2 py-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-all duration-150 text-[11px] font-medium"
-					>
-						<Save size={14} />
-						{ts("project.save")}
-					</button>
-				</div>
-			</div>
+			<Titlebar
+				isMac={isMac}
+				locale={locale}
+				setLocale={setLocale}
+				videoPath={videoPath}
+				undoCount={undoCount}
+				redoCount={redoCount}
+				onUndo={undo}
+				onRedo={redo}
+				onExport={handleOpenExportDialog}
+				onSearch={() => {
+					// TODO: open command palette (step 7)
+				}}
+				onNewRecording={() => setShowNewRecordingDialog(true)}
+				onLoadProject={handleLoadProject}
+				onSaveProject={handleSaveProject}
+				unsaved={hasUnsavedChanges}
+			/>
 
 			<div className="flex-1 flex min-h-0 relative">
 				<PanelGroup direction="vertical" className="flex-1 min-h-0">
