@@ -667,6 +667,7 @@ export default function VideoEditor() {
 			setSelectedTrimId(null);
 			setSelectedAnnotationId(null);
 			setSelectedBlurId(null);
+			setActiveTab("visual");
 		}
 	}, []);
 
@@ -676,6 +677,7 @@ export default function VideoEditor() {
 			setSelectedZoomId(null);
 			setSelectedAnnotationId(null);
 			setSelectedBlurId(null);
+			setActiveTab("edit");
 		}
 	}, []);
 
@@ -685,6 +687,7 @@ export default function VideoEditor() {
 			setSelectedZoomId(null);
 			setSelectedTrimId(null);
 			setSelectedBlurId(null);
+			setActiveTab("annotations");
 		}
 	}, []);
 
@@ -695,6 +698,7 @@ export default function VideoEditor() {
 			setSelectedTrimId(null);
 			setSelectedAnnotationId(null);
 			setSelectedSpeedId(null);
+			setActiveTab("annotations");
 		}
 	}, []);
 
@@ -860,6 +864,7 @@ export default function VideoEditor() {
 			setSelectedTrimId(null);
 			setSelectedAnnotationId(null);
 			setSelectedBlurId(null);
+			setActiveTab("visual");
 		}
 	}, []);
 

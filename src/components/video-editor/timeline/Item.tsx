@@ -50,6 +50,7 @@ export default function Item({
 	const isZoom = variant === "zoom";
 	const isTrim = variant === "trim";
 	const isSpeed = variant === "speed";
+	const isBlur = variant === "blur";
 
 	const glassClass = isZoom
 		? glassStyles.glassGreen
@@ -57,33 +58,41 @@ export default function Item({
 			? glassStyles.glassRed
 			: isSpeed
 				? glassStyles.glassAmber
-				: glassStyles.glassYellow;
+				: isBlur
+					? glassStyles.glassBlue
+					: glassStyles.glassYellow;
 
-	const endCapColor = isZoom ? "#21916A" : isTrim ? "#ef4444" : isSpeed ? "#d97706" : "#B4A046";
+	const endCapColor = isZoom
+		? "#21916A"
+		: isTrim
+			? "#ef4444"
+			: isSpeed
+				? "#d97706"
+				: isBlur
+					? "#7dd3fc"
+					: "#B4A046";
 
 	// Minimum clickable width on the outer wrapper.
-	// Kept small (6px) so items visually distinguish their real positions;
-	// users should zoom in to interact with sub-second items precisely.
 	const MIN_ITEM_PX = 6;
 	const safeItemStyle = { ...itemStyle, minWidth: MIN_ITEM_PX };
 
 	return (
 		<div
 			ref={setNodeRef}
-			style={safeItemStyle}
+			style={{ ...safeItemStyle, height: "100%" }}
 			{...listeners}
 			{...attributes}
 			onPointerDownCapture={() => onSelect?.()}
 			className="group"
 		>
-			<div style={{ ...itemContentStyle, minWidth: 24 }}>
+			<div style={{ ...itemContentStyle, minWidth: 24, height: "100%" }}>
 				<div
 					className={cn(
 						glassClass,
 						"w-full h-full overflow-hidden flex items-center justify-center gap-1.5 cursor-grab active:cursor-grabbing relative",
 						isSelected && glassStyles.selected,
 					)}
-					style={{ height: 18, color: "#fff", minWidth: 24 }}
+					style={{ height: "100%", color: "#fff", minWidth: 24 }}
 					onClick={(event) => {
 						event.stopPropagation();
 						onSelect?.();

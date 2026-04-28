@@ -101,10 +101,14 @@ export default function TimelineOverview({
 
 	if (videoDurationMs <= 0) {
 		return (
-			<div
-				className="h-10 bg-[#06060b] border-b border-white/5 relative"
-				style={{ marginLeft: sidebarWidth }}
-			/>
+			<div className="h-8 bg-[#06060b] border-b border-white/5 relative flex items-center shrink-0">
+				<span
+					className="absolute text-[8px] font-medium tracking-[0.08em] uppercase select-none pointer-events-none"
+					style={{ left: 8, color: "rgba(255,255,255,0.18)" }}
+				>
+					Overview
+				</span>
+			</div>
 		);
 	}
 
@@ -114,9 +118,23 @@ export default function TimelineOverview({
 
 	return (
 		<div
-			className="h-6 bg-[#06060b] border-b border-white/5 relative shrink-0"
+			className="h-8 bg-[#06060b] border-b border-white/5 relative shrink-0"
 			style={{ paddingLeft: sidebarWidth }}
 		>
+			{/* "OVERVIEW" label in the sidebar gutter */}
+			<span
+				className="absolute text-[8px] font-medium tracking-[0.08em] uppercase select-none pointer-events-none"
+				style={{
+					left: 0,
+					width: sidebarWidth,
+					textAlign: "center",
+					top: "50%",
+					transform: "translateY(-50%)",
+					color: "rgba(255,255,255,0.18)",
+				}}
+			>
+				OVW
+			</span>
 			<div
 				className="absolute inset-y-0 cursor-pointer group"
 				style={{ left: sidebarWidth, right: 0 }}

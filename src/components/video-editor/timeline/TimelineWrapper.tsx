@@ -1,3 +1,4 @@
+import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import type {
 	DragEndEvent,
 	DragMoveEvent,
@@ -36,6 +37,12 @@ export default function TimelineWrapper({
 	onItemSpanChange,
 	allRegionSpans = [],
 }: TimelineWrapperProps) {
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: { distance: 4 },
+		}),
+	);
+
 	const totalMs = Math.max(0, Math.round(videoDuration * 1000));
 
 	const clampSpanToBounds = useCallback(
@@ -295,6 +302,7 @@ export default function TimelineWrapper({
 	return (
 		<TimelineContext
 			range={range}
+			sensors={sensors}
 			onRangeChanged={handleRangeChange}
 			onResizeEnd={onResizeEndWithTooltip}
 			onResizeMove={onResizeMove}
@@ -304,7 +312,7 @@ export default function TimelineWrapper({
 			autoScroll={{ enabled: false }}
 			sidebarWidth={52}
 		>
-			<div className="relative">
+			<div className="relative flex-1 flex flex-col min-h-0">
 				{children}
 				{/* Floating tooltip shown during drag/resize */}
 				<div

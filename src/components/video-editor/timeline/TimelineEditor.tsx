@@ -1,15 +1,6 @@
 import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
-import {
-	Check,
-	ChevronDown,
-	Gauge,
-	Layers,
-	MessageSquare,
-	Plus,
-	Scissors,
-	ZoomIn,
-} from "lucide-react";
+import { Check, ChevronDown, Plus, ZoomIn } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -463,8 +454,9 @@ function TimelineAxis({
 
 	return (
 		<div
-			className="h-6 bg-[#06060b] border-b border-white/5 relative overflow-hidden select-none"
+			className="bg-[#06060b] border-b border-white/[0.04] relative overflow-hidden select-none shrink-0"
 			style={{
+				height: 18,
 				[sideProperty === "right" ? "marginRight" : "marginLeft"]: `${sidebarWidth}px`,
 			}}
 		>
@@ -646,7 +638,7 @@ function Timeline({
 	return (
 		<div
 			ref={setRefs}
-			style={style}
+			style={{ ...style, flex: "1 1 0%", minHeight: 0 }}
 			className="select-none bg-[#06060b] relative cursor-pointer group"
 			onClick={handleTimelineClick}
 			onWheel={handleTimelineWheel}
@@ -667,7 +659,7 @@ function Timeline({
 				isEmpty={zoomItems.length === 0}
 				hint={t("hints.pressZoom")}
 				variant="zoom"
-				icon={<ZoomIn size={13} strokeWidth={1.8} />}
+				label={t("labels.zoom")}
 			>
 				{zoomItems.map((item) => (
 					<Item
@@ -691,7 +683,7 @@ function Timeline({
 				isEmpty={trimItems.length === 0}
 				hint={t("hints.pressTrim")}
 				variant="trim"
-				icon={<Scissors size={13} strokeWidth={1.8} />}
+				label={t("labels.trim")}
 			>
 				{trimItems.map((item) => (
 					<Item
@@ -713,7 +705,7 @@ function Timeline({
 				isEmpty={annotationItems.length === 0}
 				hint={t("hints.pressAnnotation")}
 				variant="annotation"
-				icon={<MessageSquare size={13} strokeWidth={1.8} />}
+				label="Text"
 			>
 				{annotationItems.map((item) => (
 					<Item
@@ -735,7 +727,7 @@ function Timeline({
 				isEmpty={blurItems.length === 0}
 				hint={t("hints.pressBlur")}
 				variant="blur"
-				icon={<Layers size={13} strokeWidth={1.8} />}
+				label="Blur"
 			>
 				{blurItems.map((item) => (
 					<Item
@@ -757,7 +749,7 @@ function Timeline({
 				isEmpty={speedItems.length === 0}
 				hint={t("hints.pressSpeed")}
 				variant="speed"
-				icon={<Gauge size={13} strokeWidth={1.8} />}
+				label={t("labels.speed")}
 			>
 				{speedItems.map((item) => (
 					<Item
@@ -1504,11 +1496,6 @@ export default function TimelineEditor({
 						keyframes={keyframes}
 					/>
 				</TimelineWrapper>
-				{/* Filler extends grid visually to fill panel when taller than rows */}
-				<div
-					className="flex-1 bg-[#06060b] bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px)] bg-[length:20px_100%]"
-					style={{ marginLeft: 52 }}
-				/>
 			</div>
 		</div>
 	);
