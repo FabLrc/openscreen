@@ -661,18 +661,6 @@ export default function VideoEditor() {
 		video.currentTime = time;
 	}
 
-	function handleStepBackward() {
-		const video = videoPlaybackRef.current?.video;
-		if (!video || !Number.isFinite(video.duration)) return;
-		video.currentTime = computeFrameStepTime(video.currentTime, video.duration, "backward");
-	}
-
-	function handleStepForward() {
-		const video = videoPlaybackRef.current?.video;
-		if (!video || !Number.isFinite(video.duration)) return;
-		video.currentTime = computeFrameStepTime(video.currentTime, video.duration, "forward");
-	}
-
 	const handleSelectZoom = useCallback((id: string | null) => {
 		setSelectedZoomId(id);
 		if (id) {
@@ -1089,35 +1077,6 @@ export default function VideoEditor() {
 		handleZoomSuggested,
 	]);
 
-	const handleAddTrimFromBar = useCallback(() => {
-		if (!duration || duration === 0 || totalMs === 0) return;
-		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
-		if (defaultDuration <= 0) return;
-		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
-		const sorted = [...trimRegions].sort((a, b) => a.startMs - b.startMs);
-		const nextRegion = sorted.find((region) => region.startMs > startPos);
-		const gapToNext = nextRegion ? nextRegion.startMs - startPos : totalMs - startPos;
-		const isOverlapping = sorted.some(
-			(region) => startPos >= region.startMs && startPos < region.endMs,
-		);
-		if (isOverlapping || gapToNext <= 0) {
-			toast.error(tTimeline("errors.cannotPlaceTrim"), {
-				description: tTimeline("errors.trimExistsAtLocation"),
-			});
-			return;
-		}
-		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
-		handleTrimAdded({ start: startPos, end: startPos + actualDuration });
-	}, [
-		duration,
-		totalMs,
-		currentTimeMs,
-		trimRegions,
-		defaultRegionDurationMs,
-		tTimeline,
-		handleTrimAdded,
-	]);
-
 	const handleAddAnnotationFromBar = useCallback(() => {
 		if (!duration || duration === 0 || totalMs === 0) return;
 		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
@@ -1126,15 +1085,6 @@ export default function VideoEditor() {
 		const endPos = Math.min(startPos + defaultDuration, totalMs);
 		handleAnnotationAdded({ start: startPos, end: endPos });
 	}, [duration, totalMs, currentTimeMs, defaultRegionDurationMs, handleAnnotationAdded]);
-
-	const handleAddBlurFromBar = useCallback(() => {
-		if (!duration || duration === 0 || totalMs === 0) return;
-		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
-		if (defaultDuration <= 0) return;
-		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
-		const endPos = Math.min(startPos + defaultDuration, totalMs);
-		handleBlurAdded({ start: startPos, end: endPos });
-	}, [duration, totalMs, currentTimeMs, defaultRegionDurationMs, handleBlurAdded]);
 
 	const handleAddSpeedFromBar = useCallback(() => {
 		if (!duration || duration === 0 || totalMs === 0) return;
@@ -2026,14 +1976,15 @@ export default function VideoEditor() {
 											onToggleFullscreen={toggleFullscreen}
 											onTogglePlayPause={togglePlayPause}
 											onSeek={handleSeek}
-											onStepBackward={handleStepBackward}
-											onStepForward={handleStepForward}
+											onGoToStart={() => handleSeek(0)}
+											onGoToEnd={() => handleSeek(duration)}
 											onAddZoom={handleAddZoomFromBar}
-											onSuggestZooms={handleSuggestZoomsFromBar}
-											onAddTrim={handleAddTrimFromBar}
-											onAddAnnotation={handleAddAnnotationFromBar}
-											onAddBlur={handleAddBlurFromBar}
+											onAutoEnhance={handleSuggestZoomsFromBar}
+											onSplit={() => setActiveTab("edit")}
 											onAddSpeed={handleAddSpeedFromBar}
+											onAddText={handleAddAnnotationFromBar}
+											onAddAudio={() => setActiveTab("audio")}
+											onWebcamPip={() => setActiveTab("overlay")}
 										/>
 									)}
 								</div>
@@ -2152,14 +2103,15 @@ export default function VideoEditor() {
 								onToggleFullscreen={toggleFullscreen}
 								onTogglePlayPause={togglePlayPause}
 								onSeek={handleSeek}
-								onStepBackward={handleStepBackward}
-								onStepForward={handleStepForward}
+								onGoToStart={() => handleSeek(0)}
+								onGoToEnd={() => handleSeek(duration)}
 								onAddZoom={handleAddZoomFromBar}
-								onSuggestZooms={handleSuggestZoomsFromBar}
-								onAddTrim={handleAddTrimFromBar}
-								onAddAnnotation={handleAddAnnotationFromBar}
-								onAddBlur={handleAddBlurFromBar}
+								onAutoEnhance={handleSuggestZoomsFromBar}
+								onSplit={() => setActiveTab("edit")}
 								onAddSpeed={handleAddSpeedFromBar}
+								onAddText={handleAddAnnotationFromBar}
+								onAddAudio={() => setActiveTab("audio")}
+								onWebcamPip={() => setActiveTab("overlay")}
 							/>
 							<TimelineEditor
 								videoDuration={duration}
