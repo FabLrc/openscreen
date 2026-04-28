@@ -37,6 +37,7 @@ import {
 } from "@/utils/aspectRatioUtils";
 import { ExportDialog } from "./ExportDialog";
 import PlaybackBar from "./PlaybackBar";
+import PanelAnnotations from "./panels/PanelAnnotations";
 import PanelAudio from "./panels/PanelAudio";
 import PanelBackground from "./panels/PanelBackground";
 import PanelEdit from "./panels/PanelEdit";
@@ -2109,6 +2110,9 @@ export default function VideoEditor() {
 											onWebcamSizePresetChange={(v) => updateState({ webcamSizePreset: v })}
 											onWebcamSizePresetCommit={commitState}
 											aspectRatio={aspectRatio}
+										/>
+									) : activeTab === "annotations" ? (
+										<PanelAnnotations
 											selectedAnnotationId={selectedAnnotationId}
 											annotationRegions={annotationOnlyRegions}
 											onAnnotationContentChange={handleAnnotationContentChange}

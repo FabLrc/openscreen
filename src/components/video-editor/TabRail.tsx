@@ -1,4 +1,4 @@
-import { Image, Layers, Scissors, Sparkles, Volume2 } from "lucide-react";
+import { Image, Layers, PenLine, Scissors, Sparkles, Volume2 } from "lucide-react";
 
 interface TabDef {
 	id: string;
@@ -26,6 +26,11 @@ const TABS: TabDef[] = [
 		id: "overlay",
 		label: "Overlay",
 		icon: <Layers size={15} strokeWidth={1.8} />,
+	},
+	{
+		id: "annotations",
+		label: "Annotate",
+		icon: <PenLine size={15} strokeWidth={1.8} />,
 	},
 	{
 		id: "edit",
