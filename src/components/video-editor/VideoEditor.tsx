@@ -1,4 +1,25 @@
 import type { Span } from "dnd-timeline";
+import {
+	Download,
+	FolderOpen,
+	Image,
+	Keyboard,
+	Layers,
+	Maximize,
+	Music,
+	PenLine,
+	Redo2,
+	Save,
+	Scissors,
+	Sparkles,
+	Type,
+	Undo2,
+	Video,
+	Volume2,
+	WandSparkles,
+	Zap,
+	ZoomIn,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { toast } from "sonner";
@@ -35,6 +56,7 @@ import {
 	getNativeAspectRatioValue,
 	isPortraitAspectRatio,
 } from "@/utils/aspectRatioUtils";
+import CommandPalette from "./CommandPalette";
 import { ExportDialog } from "./ExportDialog";
 import PlaybackBar from "./PlaybackBar";
 import PanelAnnotations from "./panels/PanelAnnotations";
@@ -143,6 +165,7 @@ export default function VideoEditor() {
 	const [showExportDialog, setShowExportDialog] = useState(false);
 	const [activeTab, setActiveTab] = useState<string | null>(null);
 	const [showNewRecordingDialog, setShowNewRecordingDialog] = useState(false);
+	const [showCommandPalette, setShowCommandPalette] = useState(false);
 	const [exportQuality, setExportQuality] = useState<ExportQuality>("good");
 	const [exportFormat, setExportFormat] = useState<ExportFormat>("mp4");
 	const [gifFrameRate, setGifFrameRate] = useState<GifFrameRate>(15);
@@ -170,6 +193,7 @@ export default function VideoEditor() {
 	const t = useScopedT("editor");
 	const ts = useScopedT("settings");
 	const tTimeline = useScopedT("timeline");
+	const tp = useScopedT("commandPalette");
 
 	const nextAnnotationIdRef = useRef(1);
 	const nextAnnotationZIndexRef = useRef(1);
@@ -1374,6 +1398,13 @@ export default function VideoEditor() {
 				return;
 			}
 
+			// Ctrl+K / Cmd+K: toggle command palette
+			if (mod && key === "k") {
+				e.preventDefault();
+				setShowCommandPalette((prev) => !prev);
+				return;
+			}
+
 			const isInput =
 				e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
 
@@ -1818,6 +1849,190 @@ export default function VideoEditor() {
 		}
 	}, []);
 
+	const commands = useMemo(
+		() => [
+			{
+				id: "nav-visual",
+				label: tp("items.navVisual"),
+				icon: <Sparkles className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("visual"),
+			},
+			{
+				id: "nav-bg",
+				label: tp("items.navBackground"),
+				icon: <Image className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("bg"),
+			},
+			{
+				id: "nav-audio",
+				label: tp("items.navAudio"),
+				icon: <Volume2 className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("audio"),
+			},
+			{
+				id: "nav-overlay",
+				label: tp("items.navOverlay"),
+				icon: <Layers className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("overlay"),
+			},
+			{
+				id: "nav-annotations",
+				label: tp("items.navAnnotations"),
+				icon: <PenLine className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("annotations"),
+			},
+			{
+				id: "nav-edit",
+				label: tp("items.navEdit"),
+				icon: <Scissors className="text-[#34B27B]" />,
+				category: "navigation" as const,
+				onSelect: () => setActiveTab("edit"),
+			},
+			{
+				id: "tool-zoom",
+				label: tp("items.toolZoom"),
+				icon: <ZoomIn className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["add zoom", "zoom region"],
+				shortcut: "Z",
+				onSelect: handleAddZoomFromBar,
+			},
+			{
+				id: "tool-speed",
+				label: tp("items.toolSpeed"),
+				icon: <Zap className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["add speed", "speed region"],
+				shortcut: "S",
+				onSelect: handleAddSpeedFromBar,
+			},
+			{
+				id: "tool-text",
+				label: tp("items.toolText"),
+				icon: <Type className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["add text", "annotation"],
+				shortcut: "A",
+				onSelect: handleAddAnnotationFromBar,
+			},
+			{
+				id: "tool-audio",
+				label: tp("items.toolAudio"),
+				icon: <Music className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["add audio", "background music"],
+				onSelect: () => setActiveTab("audio"),
+			},
+			{
+				id: "tool-webcam",
+				label: tp("items.toolWebcam"),
+				icon: <Video className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["webcam pip", "picture in picture", "camera"],
+				onSelect: () => setActiveTab("overlay"),
+			},
+			{
+				id: "tool-auto-enhance",
+				label: tp("items.toolAutoEnhance"),
+				icon: <WandSparkles className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["auto enhance", "auto zoom", "suggestions"],
+				onSelect: handleSuggestZoomsFromBar,
+			},
+			{
+				id: "tool-split",
+				label: tp("items.toolSplit"),
+				icon: <Scissors className="text-[#34B27B]" />,
+				category: "tools" as const,
+				keywords: ["split clip", "trim"],
+				onSelect: () => setActiveTab("edit"),
+			},
+			{
+				id: "action-export",
+				label: tp("items.actionExport"),
+				icon: <Download className="text-[#34B27B]" />,
+				category: "actions" as const,
+				keywords: ["mp4", "gif", "render", "save video"],
+				onSelect: handleOpenExportDialog,
+			},
+			{
+				id: "action-new-recording",
+				label: tp("items.actionNewRecording"),
+				icon: <Video className="text-[#34B27B]" />,
+				category: "actions" as const,
+				keywords: ["new recording", "record screen"],
+				onSelect: () => setShowNewRecordingDialog(true),
+			},
+			{
+				id: "action-save",
+				label: tp("items.actionSave"),
+				icon: <Save className="text-[#34B27B]" />,
+				category: "actions" as const,
+				keywords: ["save project", "save"],
+				onSelect: handleSaveProject,
+			},
+			{
+				id: "action-load",
+				label: tp("items.actionLoad"),
+				icon: <FolderOpen className="text-[#34B27B]" />,
+				category: "actions" as const,
+				keywords: ["load project", "open project"],
+				onSelect: handleLoadProject,
+			},
+			{
+				id: "action-undo",
+				label: tp("items.actionUndo"),
+				icon: <Undo2 className="text-[#34B27B]" />,
+				category: "actions" as const,
+				shortcut: "⌘Z",
+				onSelect: undo,
+			},
+			{
+				id: "action-redo",
+				label: tp("items.actionRedo"),
+				icon: <Redo2 className="text-[#34B27B]" />,
+				category: "actions" as const,
+				shortcut: "⌘⇧Z",
+				onSelect: redo,
+			},
+			{
+				id: "action-fullscreen",
+				label: tp("items.actionFullscreen"),
+				icon: <Maximize className="text-[#34B27B]" />,
+				category: "actions" as const,
+				keywords: ["full screen", "maximize"],
+				onSelect: toggleFullscreen,
+			},
+			{
+				id: "setting-shortcuts",
+				label: tp("items.settingShortcuts"),
+				icon: <Keyboard className="text-[#34B27B]" />,
+				category: "settings" as const,
+				keywords: ["keyboard shortcuts", "hotkeys", "keys"],
+				onSelect: openConfig,
+			},
+		],
+		[
+			tp,
+			handleAddZoomFromBar,
+			handleAddSpeedFromBar,
+			handleAddAnnotationFromBar,
+			handleSuggestZoomsFromBar,
+			handleOpenExportDialog,
+			handleSaveProject,
+			handleLoadProject,
+			undo,
+			redo,
+			openConfig,
+			toggleFullscreen,
+		],
+	);
+
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center h-screen bg-background">
@@ -1882,9 +2097,7 @@ export default function VideoEditor() {
 				onUndo={undo}
 				onRedo={redo}
 				onExport={handleOpenExportDialog}
-				onSearch={() => {
-					// TODO: open command palette (step 7)
-				}}
+				onSearch={() => setShowCommandPalette(true)}
 				onShortcuts={openConfig}
 				onNewRecording={() => setShowNewRecordingDialog(true)}
 				onLoadProject={handleLoadProject}
@@ -2181,6 +2394,12 @@ export default function VideoEditor() {
 				onShowInFolder={
 					exportedFilePath ? () => void handleShowExportedFile(exportedFilePath) : undefined
 				}
+			/>
+
+			<CommandPalette
+				open={showCommandPalette}
+				onOpenChange={setShowCommandPalette}
+				commands={commands}
 			/>
 		</div>
 	);

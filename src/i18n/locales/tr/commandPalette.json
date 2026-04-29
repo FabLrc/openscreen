@@ -1,0 +1,33 @@
+{
+	"placeholder": "Search commands...",
+	"noResults": "No results found",
+	"categories": {
+		"navigation": "Navigation",
+		"tools": "Tools",
+		"actions": "Actions",
+		"settings": "Settings"
+	},
+	"items": {
+		"navVisual": "Visual Settings",
+		"navBackground": "Background",
+		"navAudio": "Audio",
+		"navOverlay": "Overlay",
+		"navAnnotations": "Annotations",
+		"navEdit": "Edit",
+		"toolZoom": "Add Zoom",
+		"toolSpeed": "Add Speed",
+		"toolText": "Add Text",
+		"toolAudio": "Add Audio",
+		"toolWebcam": "Webcam PIP",
+		"toolAutoEnhance": "Auto-enhance",
+		"toolSplit": "Split at playhead",
+		"actionExport": "Export",
+		"actionNewRecording": "New Recording",
+		"actionSave": "Save Project",
+		"actionLoad": "Load Project",
+		"actionUndo": "Undo",
+		"actionRedo": "Redo",
+		"actionFullscreen": "Toggle Fullscreen",
+		"settingShortcuts": "Keyboard Shortcuts"
+	}
+}

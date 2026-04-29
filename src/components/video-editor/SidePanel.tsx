@@ -28,7 +28,9 @@ export default function SidePanel({ activeTab, onClose, children }: SidePanelPro
 				</button>
 			</div>
 			{/* Content */}
-			<div className="flex-1 overflow-y-auto px-3.5 py-3">{children}</div>
+			<div className="flex-1 overflow-y-auto px-3.5 py-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-thumb]:bg-white/[0.08] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+				{children}
+			</div>
 		</div>
 	);
 }

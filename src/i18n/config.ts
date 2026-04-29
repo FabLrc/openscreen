@@ -10,6 +10,7 @@ export const SUPPORTED_LOCALES = [
 	"ja-JP",
 ] as const;
 export const I18N_NAMESPACES = [
+	"commandPalette",
 	"common",
 	"dialogs",
 	"editor",
