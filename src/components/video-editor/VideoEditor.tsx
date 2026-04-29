@@ -1945,14 +1945,6 @@ export default function VideoEditor() {
 				onSelect: handleSuggestZoomsFromBar,
 			},
 			{
-				id: "tool-split",
-				label: tp("items.toolSplit"),
-				icon: <Scissors className="text-[#34B27B]" />,
-				category: "tools" as const,
-				keywords: ["split clip", "trim"],
-				onSelect: () => setActiveTab("edit"),
-			},
-			{
 				id: "action-export",
 				label: tp("items.actionExport"),
 				icon: <Download className="text-[#34B27B]" />,
@@ -2198,7 +2190,6 @@ export default function VideoEditor() {
 											onGoToEnd={() => handleSeek(duration)}
 											onAddZoom={handleAddZoomFromBar}
 											onAutoEnhance={handleSuggestZoomsFromBar}
-											onSplit={() => setActiveTab("edit")}
 											onAddSpeed={handleAddSpeedFromBar}
 											onAddText={handleAddAnnotationFromBar}
 											onAddAudio={() => setActiveTab("audio")}
@@ -2297,7 +2288,11 @@ export default function VideoEditor() {
 											onBlurDelete={handleAnnotationDelete}
 										/>
 									) : activeTab === "edit" ? (
-										<PanelEdit selectedTrimId={selectedTrimId} onTrimDelete={handleTrimDelete} />
+										<PanelEdit
+											trimRegions={trimRegions}
+											selectedTrimId={selectedTrimId}
+											onTrimDelete={handleTrimDelete}
+										/>
 									) : null}
 								</SidePanel>
 							)}
@@ -2325,7 +2320,6 @@ export default function VideoEditor() {
 								onGoToEnd={() => handleSeek(duration)}
 								onAddZoom={handleAddZoomFromBar}
 								onAutoEnhance={handleSuggestZoomsFromBar}
-								onSplit={() => setActiveTab("edit")}
 								onAddSpeed={handleAddSpeedFromBar}
 								onAddText={handleAddAnnotationFromBar}
 								onAddAudio={() => setActiveTab("audio")}
