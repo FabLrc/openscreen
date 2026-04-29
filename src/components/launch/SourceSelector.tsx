@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { MdCheck } from "react-icons/md";
 import { useScopedT } from "@/contexts/I18nContext";
 import { Button } from "../ui/button";
@@ -33,8 +33,8 @@ export function SourceSelector() {
 					rawSources.map((source) => ({
 						id: source.id,
 						name:
-							source.id.startsWith("window:") && source.name.includes(" — ")
-								? source.name.split(" — ")[1] || source.name
+							source.id.startsWith("window:") && source.name.includes(" â€” ")
+								? source.name.split(" â€” ")[1] || source.name
 								: source.name,
 						thumbnail: source.thumbnail,
 						display_id: source.display_id,
@@ -65,7 +65,7 @@ export function SourceSelector() {
 				style={{ minHeight: "100vh" }}
 			>
 				<div className="text-center">
-					<div className="animate-spin duration-500 rounded-[50%] h-6 w-6 border-2 border-b-transparent border-[#34B27B] mx-auto mb-2" />
+					<div className="animate-spin duration-500 rounded-[50%] h-6 w-6 border-2 border-b-transparent border-brand mx-auto mb-2" />
 					<p className="text-xs text-zinc-400">{t("sourceSelector.loading")}</p>
 				</div>
 			</div>
@@ -154,7 +154,7 @@ export function SourceSelector() {
 				<Button
 					onClick={handleShare}
 					disabled={!selectedSource}
-					className="px-5 py-1 text-xs bg-[#34B27B] text-white active:scale-95 transition-transform duration-150 hover:bg-[#34B27B]/80 disabled:opacity-30 disabled:bg-zinc-700 rounded-full"
+					className="px-5 py-1 text-xs bg-brand text-white active:scale-95 transition-transform duration-150 hover:bg-brand/80 disabled:opacity-30 disabled:bg-zinc-700 rounded-full"
 				>
 					{tc("actions.share")}
 				</Button>

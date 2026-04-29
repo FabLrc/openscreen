@@ -1,4 +1,4 @@
-import { Keyboard, RotateCcw } from "lucide-react";
+﻿import { Keyboard, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -129,7 +129,7 @@ export function ShortcutsConfigDialog() {
 			<DialogContent className="bg-[#09090b] border-white/10 text-white max-w-[420px]">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2 text-sm">
-						<Keyboard className="w-4 h-4 text-[#34B27B]" />
+						<Keyboard className="w-4 h-4 text-brand" />
 						{t("title")}
 					</DialogTitle>
 				</DialogHeader>
@@ -155,10 +155,10 @@ export function ShortcutsConfigDialog() {
 										className={[
 											"px-2 py-1 rounded text-xs font-mono border transition-all min-w-[90px] text-center select-none",
 											isCapturing
-												? "bg-[#34B27B]/20 border-[#34B27B] text-[#34B27B] animate-pulse"
+												? "bg-brand/20 border-brand text-brand animate-pulse"
 												: hasConflict
 													? "bg-amber-500/10 border-amber-500/50 text-amber-400"
-													: "bg-white/5 border-white/10 text-slate-200 hover:border-[#34B27B]/50 hover:text-[#34B27B] cursor-pointer",
+													: "bg-white/5 border-white/10 text-slate-200 hover:border-brand/50 hover:text-brand cursor-pointer",
 										].join(" ")}
 									>
 										{isCapturing ? t("pressKey") : formatBinding(draft[action], isMac)}
@@ -167,7 +167,7 @@ export function ShortcutsConfigDialog() {
 								{hasConflict && conflict?.conflictWith.type === "configurable" && (
 									<div className="flex items-center justify-between px-1 py-1.5 mb-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-xs">
 										<span className="text-amber-400">
-											⚠{" "}
+											âš {" "}
 											{t("alreadyUsedBy", { action: t(`actions.${conflict.conflictWith.action}`) })}
 										</span>
 										<div className="flex gap-1.5">
@@ -230,7 +230,7 @@ export function ShortcutsConfigDialog() {
 						</Button>
 						<Button
 							size="sm"
-							className="bg-[#34B27B] hover:bg-[#2d9e6c] text-white"
+							className="bg-brand hover:bg-brand/90 text-white"
 							onClick={handleSave}
 						>
 							{tc("actions.save")}

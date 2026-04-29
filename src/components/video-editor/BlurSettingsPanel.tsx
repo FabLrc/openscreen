@@ -53,7 +53,7 @@ export function BlurSettingsPanel({
 			<div className="mb-6">
 				<div className="flex items-center justify-between mb-4">
 					<span className="text-sm font-medium text-slate-200">{t("annotation.blurShape")}</span>
-					<span className="text-[10px] uppercase tracking-wider font-medium text-[#34B27B] bg-[#34B27B]/10 px-2 py-1 rounded-full">
+					<span className="text-[10px] uppercase tracking-wider font-medium text-brand bg-brand/10 px-2 py-1 rounded-full">
 						{t("annotation.active")}
 					</span>
 				</div>
@@ -79,7 +79,7 @@ export function BlurSettingsPanel({
 								className={cn(
 									"h-16 rounded-lg border flex flex-col items-center justify-center transition-all p-2 gap-1",
 									isActive
-										? "bg-[#34B27B] border-[#34B27B]"
+										? "bg-brand border-brand"
 										: "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20",
 								)}
 							>
@@ -160,7 +160,7 @@ export function BlurSettingsPanel({
 									className={cn(
 										"h-10 rounded-lg border flex items-center gap-2 px-3 transition-all",
 										isActive
-											? "bg-[#34B27B] border-[#34B27B]"
+											? "bg-brand border-brand"
 											: "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20",
 									)}
 								>
@@ -218,7 +218,7 @@ export function BlurSettingsPanel({
 						min={blurRegion.blurData?.type === "mosaic" ? MIN_BLUR_BLOCK_SIZE : MIN_BLUR_INTENSITY}
 						max={blurRegion.blurData?.type === "mosaic" ? MAX_BLUR_BLOCK_SIZE : MAX_BLUR_INTENSITY}
 						step={1}
-						className="w-full [&_[role=slider]]:bg-[#34B27B] [&_[role=slider]]:border-[#34B27B] [&_[role=slider]]:h-3 [&_[role=slider]]:w-3"
+						className="w-full [&_[role=slider]]:bg-brand [&_[role=slider]]:border-brand [&_[role=slider]]:h-3 [&_[role=slider]]:w-3"
 					/>
 				</div>
 

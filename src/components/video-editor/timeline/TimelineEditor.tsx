@@ -1,4 +1,4 @@
-import type { Range, Span } from "dnd-timeline";
+﻿import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
 import { Check, ChevronDown, Plus, ZoomIn } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -109,7 +109,7 @@ const SCALE_CANDIDATES = [
 
 /**
  * Picks the best axis interval for the currently visible time range.
- * Called dynamically — re-runs on every zoom change so the axis always
+ * Called dynamically â€” re-runs on every zoom change so the axis always
  * shows a meaningful density of markers regardless of video length.
  */
 function calculateAxisScale(visibleRangeMs: number): { intervalMs: number; gridMs: number } {
@@ -138,7 +138,7 @@ function calculateTimelineScale(durationSeconds: number): TimelineScaleConfig {
 			? Math.max(minItemDurationMs, Math.min(Math.round(totalMs * 0.05), 30000))
 			: Math.max(minItemDurationMs, 1000);
 
-	// Minimum visible range: 300ms — allows comfortably viewing 0.1s items.
+	// Minimum visible range: 300ms â€” allows comfortably viewing 0.1s items.
 	// Axis markers adapt dynamically via calculateAxisScale, so there is no
 	// upper constraint on how far the user can zoom in.
 	const minVisibleRangeMs = 300;
@@ -357,7 +357,7 @@ function PlaybackCursor({
 			}}
 		>
 			<div
-				className="absolute top-0 bottom-0 w-[2px] bg-[#34B27B] shadow-[0_0_10px_rgba(52,178,123,0.5)] cursor-ew-resize pointer-events-auto hover:shadow-[0_0_15px_rgba(52,178,123,0.7)] transition-shadow"
+				className="absolute top-0 bottom-0 w-[2px] bg-brand shadow-[0_0_10px_rgba(52,178,123,0.5)] cursor-ew-resize pointer-events-auto hover:shadow-[0_0_15px_rgba(52,178,123,0.7)] transition-shadow"
 				style={{
 					[sideProperty]: `${offset}px`,
 				}}
@@ -371,7 +371,7 @@ function PlaybackCursor({
 					className="absolute -top-1 left-1/2 -translate-x-1/2 hover:scale-125 transition-transform"
 					style={{ width: "16px", height: "16px" }}
 				>
-					<div className="w-3 h-3 mx-auto mt-[2px] bg-[#34B27B] rotate-45 rounded-sm shadow-lg border border-white/20" />
+					<div className="w-3 h-3 mx-auto mt-[2px] bg-brand rotate-45 rounded-sm shadow-lg border border-white/20" />
 				</div>
 				{isDragging && (
 					<div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-black/80 text-[10px] text-white/90 font-medium tabular-nums whitespace-nowrap border border-white/10 shadow-lg pointer-events-none">
@@ -492,7 +492,7 @@ function TimelineAxis({
 							<span
 								className={cn(
 									"text-[10px] font-medium tabular-nums tracking-tight",
-									marker.time === currentTimeMs ? "text-[#34B27B]" : "text-slate-500",
+									marker.time === currentTimeMs ? "text-brand" : "text-slate-500",
 								)}
 							>
 								{marker.label}
@@ -1365,7 +1365,7 @@ export default function TimelineEditor({
 									className="text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3"
 								>
 									<span>{getAspectRatioLabel(ratio)}</span>
-									{aspectRatio === ratio && <Check className="w-3 h-3 text-[#34B27B]" />}
+									{aspectRatio === ratio && <Check className="w-3 h-3 text-brand" />}
 								</DropdownMenuItem>
 							))}
 						</DropdownMenuContent>

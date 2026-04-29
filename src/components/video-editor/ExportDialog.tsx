@@ -1,4 +1,4 @@
-import { Download, Loader2, X } from "lucide-react";
+﻿import { Download, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useScopedT } from "@/contexts/I18nContext";
@@ -99,8 +99,8 @@ export function ExportDialog({
 					<div className="flex items-center gap-4">
 						{showSuccess ? (
 							<>
-								<div className="w-12 h-12 rounded-full bg-[#34B27B]/20 flex items-center justify-center ring-1 ring-[#34B27B]/50">
-									<Download className="w-6 h-6 text-[#34B27B]" />
+								<div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center ring-1 ring-brand/50">
+									<Download className="w-6 h-6 text-brand" />
 								</div>
 								<div className="flex flex-col gap-2">
 									<span className="text-xl font-bold text-slate-200 block">
@@ -128,8 +128,8 @@ export function ExportDialog({
 						) : (
 							<>
 								{isExporting ? (
-									<div className="w-12 h-12 rounded-full bg-[#34B27B]/10 flex items-center justify-center">
-										<Loader2 className="w-6 h-6 text-[#34B27B] animate-spin" />
+									<div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center">
+										<Loader2 className="w-6 h-6 text-brand animate-spin" />
 									</div>
 								) : (
 									<div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
@@ -195,13 +195,13 @@ export function ExportDialog({
 									// Show render progress if available, otherwise animated indeterminate bar
 									renderProgress !== undefined && renderProgress > 0 ? (
 										<div
-											className="h-full bg-[#34B27B] shadow-[0_0_10px_rgba(52,178,123,0.3)] transition-all duration-300 ease-out"
+											className="h-full bg-brand shadow-[0_0_10px_rgba(52,178,123,0.3)] transition-all duration-300 ease-out"
 											style={{ width: `${renderProgress}%` }}
 										/>
 									) : (
 										<div className="h-full w-full relative overflow-hidden">
 											<div
-												className="absolute h-full w-1/3 bg-[#34B27B] shadow-[0_0_10px_rgba(52,178,123,0.3)]"
+												className="absolute h-full w-1/3 bg-brand shadow-[0_0_10px_rgba(52,178,123,0.3)]"
 												style={{
 													animation: "indeterminate 1.5s ease-in-out infinite",
 												}}
@@ -216,7 +216,7 @@ export function ExportDialog({
 									)
 								) : (
 									<div
-										className="h-full bg-[#34B27B] shadow-[0_0_10px_rgba(52,178,123,0.3)] transition-all duration-300 ease-out"
+										className="h-full bg-brand shadow-[0_0_10px_rgba(52,178,123,0.3)] transition-all duration-300 ease-out"
 										style={{ width: `${Math.min(progress.percentage, 100)}%` }}
 									/>
 								)}

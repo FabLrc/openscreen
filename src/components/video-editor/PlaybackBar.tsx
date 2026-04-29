@@ -1,4 +1,4 @@
-import {
+﻿import {
 	Maximize,
 	Minimize,
 	Music,
@@ -93,7 +93,7 @@ export default function PlaybackBar({
 						"h-8 w-8 rounded-full transition-all duration-200 border",
 						isPlaying
 							? "bg-white/10 text-white border-white/10 hover:bg-white/20"
-							: "bg-brand text-white border-brand hover:bg-[#2d9e6d] hover:scale-105",
+							: "bg-brand text-white border-brand hover:bg-brand/90 hover:scale-105",
 					)}
 					aria-label={isPlaying ? tCommon("playback.pause") : tCommon("playback.play")}
 				>

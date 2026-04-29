@@ -1,4 +1,4 @@
-import {
+﻿import {
 	Application,
 	BlurFilter,
 	Container,
@@ -460,7 +460,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 			endFocusDrag(event);
 		};
 
-		// ── Webcam PiP drag handlers ──
+		// â”€â”€ Webcam PiP drag handlers â”€â”€
 
 		const handleWebcamPointerDown = (event: React.PointerEvent<HTMLVideoElement>) => {
 			if (isPlayingRef.current) return;
@@ -548,7 +548,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 			const el = overlayRef.current;
 			if (!el) return;
 
-			// Seed immediately so overlays never start at 800×600
+			// Seed immediately so overlays never start at 800Ã—600
 			setOverlaySize({ width: el.clientWidth, height: el.clientHeight });
 
 			const observer = new ResizeObserver((entries) => {
@@ -892,7 +892,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 						const isZoomingIn =
 							targetProgress < 0.999 && targetProgress >= prevTargetProgressRef.current;
 						if (targetProgress >= 0.999) {
-							// Full zoom: adaptive smoothing — moves faster when far, decelerates when close
+							// Full zoom: adaptive smoothing â€” moves faster when far, decelerates when close
 							const prev = smoothedAutoFocusRef.current ?? raw;
 							const factor = adaptiveSmoothFactor(
 								raw,
@@ -909,7 +909,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 							// position; keep ref in sync to avoid snap when full-zoom begins
 							smoothedAutoFocusRef.current = raw;
 						} else {
-							// Zoom-out: keep smoothing for continuity — avoids snap at zoom-out start
+							// Zoom-out: keep smoothing for continuity â€” avoids snap at zoom-out start
 							const prev = smoothedAutoFocusRef.current ?? raw;
 							const factor = adaptiveSmoothFactor(
 								raw,
@@ -1256,7 +1256,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 					>
 						<div
 							ref={focusIndicatorRef}
-							className="absolute rounded-md border border-[#34B27B]/80 bg-[#34B27B]/20 shadow-[0_0_0_1px_rgba(52,178,123,0.35)]"
+							className="absolute rounded-md border border-brand/80 bg-brand/20 shadow-[0_0_0_1px_rgba(52,178,123,0.35)]"
 							style={{ display: "none", pointerEvents: "none" }}
 						/>
 						{(() => {
