@@ -164,6 +164,7 @@ export default function VideoEditor() {
 	const [exportError, setExportError] = useState<string | null>(null);
 	const [showExportDialog, setShowExportDialog] = useState(false);
 	const [activeTab, setActiveTab] = useState<string | null>(null);
+	const [sidePanelWidth, setSidePanelWidth] = useState(244);
 	const [showNewRecordingDialog, setShowNewRecordingDialog] = useState(false);
 	const [showCommandPalette, setShowCommandPalette] = useState(false);
 	const [exportQuality, setExportQuality] = useState<ExportQuality>("good");
@@ -2233,7 +2234,12 @@ export default function VideoEditor() {
 
 							{/* Right: SidePanel + TabRail */}
 							{activeTab && (
-								<SidePanel activeTab={activeTab} onClose={() => setActiveTab(null)}>
+								<SidePanel
+									activeTab={activeTab}
+									onClose={() => setActiveTab(null)}
+									width={sidePanelWidth}
+									onWidthChange={setSidePanelWidth}
+								>
 									{activeTab === "visual" ? (
 										<PanelVisual
 											selectedZoomDepth={

@@ -1,20 +1,65 @@
 import { X } from "lucide-react";
+import { useCallback, useRef } from "react";
 import { TABS } from "./TabRail";
 
 interface SidePanelProps {
 	activeTab: string | null;
 	onClose: () => void;
 	children?: React.ReactNode;
+	width: number;
+	onWidthChange: (width: number) => void;
 }
 
-export default function SidePanel({ activeTab, onClose, children }: SidePanelProps) {
-	if (!activeTab) return null;
+export default function SidePanel({
+	activeTab,
+	onClose,
+	children,
+	width,
+	onWidthChange,
+}: SidePanelProps) {
+	const dragState = useRef<{
+		startX: number;
+		startWidth: number;
+	} | null>(null);
+
+	const handlePointerDown = useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			e.preventDefault();
+			e.currentTarget.setPointerCapture(e.pointerId);
+			dragState.current = { startX: e.clientX, startWidth: width };
+
+			function onPointerMove(ev: PointerEvent) {
+				if (!dragState.current) return;
+				const delta = dragState.current.startX - ev.clientX;
+				const newWidth = Math.max(180, Math.min(400, dragState.current.startWidth + delta));
+				onWidthChange(newWidth);
+			}
+
+			function onPointerUp() {
+				dragState.current = null;
+				window.removeEventListener("pointermove", onPointerMove);
+				window.removeEventListener("pointerup", onPointerUp);
+			}
+
+			window.addEventListener("pointermove", onPointerMove);
+			window.addEventListener("pointerup", onPointerUp);
+		},
+		[width, onWidthChange],
+	);
 
 	const tab = TABS.find((t) => t.id === activeTab);
 	if (!tab) return null;
 
 	return (
-		<div className="w-[244px] bg-[#0e0e18] border-l border-white/[0.06] flex flex-col overflow-hidden flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.25)]">
+		<div
+			className="bg-[#0e0e18] border-l border-white/[0.06] flex flex-col overflow-hidden flex-shrink-0 shadow-[-8px_0_24px_rgba(0,0,0,0.25)] relative"
+			style={{ width }}
+		>
+			{/* Resize handle */}
+			<div
+				className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-white/20 active:bg-white/30 transition-colors z-10"
+				onPointerDown={handlePointerDown}
+			/>
 			{/* Header */}
 			<div className="px-3.5 py-2.5 border-b border-white/[0.06] flex items-center gap-2 flex-shrink-0">
 				<span className="text-[#34B27B]">{tab.icon}</span>
