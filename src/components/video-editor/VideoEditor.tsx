@@ -2190,6 +2190,7 @@ export default function VideoEditor() {
 											onGoToEnd={() => handleSeek(duration)}
 											onAddZoom={handleAddZoomFromBar}
 											onAutoEnhance={handleSuggestZoomsFromBar}
+											onTrim={() => setActiveTab("edit")}
 											onAddSpeed={handleAddSpeedFromBar}
 											onAddText={handleAddAnnotationFromBar}
 											onAddAudio={() => setActiveTab("audio")}
@@ -2320,6 +2321,7 @@ export default function VideoEditor() {
 								onGoToEnd={() => handleSeek(duration)}
 								onAddZoom={handleAddZoomFromBar}
 								onAutoEnhance={handleSuggestZoomsFromBar}
+								onTrim={() => setActiveTab("edit")}
 								onAddSpeed={handleAddSpeedFromBar}
 								onAddText={handleAddAnnotationFromBar}
 								onAddAudio={() => setActiveTab("audio")}

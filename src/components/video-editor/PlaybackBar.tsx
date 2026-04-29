@@ -4,6 +4,7 @@ import {
 	Music,
 	Pause,
 	Play,
+	Scissors,
 	SkipBack,
 	SkipForward,
 	Type,
@@ -28,6 +29,7 @@ interface PlaybackBarProps {
 	onGoToEnd?: () => void;
 	onAddZoom?: () => void;
 	onAutoEnhance?: () => void;
+	onTrim?: () => void;
 	onAddSpeed?: () => void;
 	onAddText?: () => void;
 	onAddAudio?: () => void;
@@ -46,6 +48,7 @@ export default function PlaybackBar({
 	onGoToEnd,
 	onAddZoom,
 	onAutoEnhance,
+	onTrim,
 	onAddSpeed,
 	onAddText,
 	onAddAudio,
@@ -152,6 +155,16 @@ export default function PlaybackBar({
 					title="Auto-enhance"
 				>
 					<WandSparkles className="w-4 h-4" />
+				</Button>
+				<Button
+					onClick={onTrim}
+					disabled={!hasVideo}
+					variant="ghost"
+					size="icon"
+					className="h-8 w-8 text-slate-400 hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-all disabled:opacity-30"
+					title="Trim"
+				>
+					<Scissors className="w-4 h-4" />
 				</Button>
 				<Button
 					onClick={onAddSpeed}
