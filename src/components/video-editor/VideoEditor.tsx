@@ -2337,7 +2337,7 @@ export default function VideoEditor() {
 					</PanelResizeHandle>
 
 					{/* Lower section: PlaybackBar (full width) + Timeline */}
-					<Panel defaultSize={30} maxSize={60} minSize={20}>
+					<Panel defaultSize={35} maxSize={60} minSize={28}>
 						<div className="h-full bg-[#07070c] overflow-hidden flex flex-col">
 							{/* Playback bar — full width, above the timeline */}
 							<PlaybackBar
