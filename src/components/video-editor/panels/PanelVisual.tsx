@@ -1,6 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { useScopedT } from "@/contexts/I18nContext";
 import type { PlaybackSpeed, ZoomDepth, ZoomFocusMode } from "../types";
 import { SPEED_OPTIONS } from "../types";
@@ -46,19 +47,23 @@ const ZOOM_DEPTH_OPTIONS: Array<{ depth: ZoomDepth; label: string }> = [
 
 function SpeedChip({
 	active,
+	disabled,
 	onClick,
 	children,
 }: {
 	active: boolean;
+	disabled?: boolean;
 	onClick: () => void;
 	children: React.ReactNode;
 }) {
 	return (
 		<button
 			type="button"
+			disabled={disabled}
 			onClick={onClick}
 			className={`
 				h-auto w-full rounded-lg border px-1 py-2 text-center shadow-sm transition-all text-xs font-semibold
+				${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
 				${active ? "border-brand bg-brand text-white shadow-brand/20" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"}
 			`}
 		>
@@ -195,6 +200,7 @@ export default function PanelVisual({
 						<SpeedChip
 							key={option.speed}
 							active={selectedSpeedValue === option.speed}
+							disabled={!selectedSpeedId}
 							onClick={() => onSpeedChange?.(option.speed)}
 						>
 							{option.label}
@@ -222,21 +228,7 @@ export default function PanelVisual({
 				<div className="space-y-2">
 					<div className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
 						<span className="text-[10px] font-medium text-slate-300">{t("effects.blurBg")}</span>
-						<button
-							type="button"
-							onClick={() => onBlurChange?.(!showBlur)}
-							className={`
-								w-8 h-[18px] rounded-full relative transition-all border cursor-pointer
-								${showBlur ? "bg-brand border-brand" : "bg-white/10 border-white/10"}
-							`}
-						>
-							<div
-								className={`
-								absolute top-0.5 w-[10px] h-[10px] bg-white rounded-full shadow transition-all
-								${showBlur ? "left-[calc(100%-12px)]" : "left-0.5"}
-							`}
-							/>
-						</button>
+						<Switch checked={showBlur} onCheckedChange={(v) => onBlurChange?.(v)} />
 					</div>
 
 					{[
@@ -287,11 +279,10 @@ export default function PanelVisual({
 								<span className="text-[10px] font-medium text-slate-300">{label}</span>
 								<span className="text-[10px] text-slate-500 font-mono">
 									{display
-										? display(value as number)
+										? `${display(value as number)}${suffix}`
 										: (value as number) === 0
 											? t("effects.off")
-											: (value as number).toFixed(2)}
-									{suffix}
+											: `${Number.isInteger(value as number) ? value : (value as number).toFixed(2)}${suffix}`}
 								</span>
 							</div>
 							<Slider

@@ -95,11 +95,6 @@ export function useExport(deps: ExportDeps) {
 	const [exportedFilePath, setExportedFilePath] = useState<string | null>(null);
 
 	const exporterRef = useRef<VideoExporter | null>(null);
-	const [_unsavedExport, setUnsavedExport] = useState<{
-		arrayBuffer: ArrayBuffer;
-		fileName: string;
-		format: string;
-	} | null>(null);
 
 	const handleShowExportedFile = useCallback(async (filePath: string) => {
 		try {
@@ -157,12 +152,12 @@ export function useExport(deps: ExportDeps) {
 			setExportError(null);
 			setExportedFilePath(null);
 
-			try {
-				const wasPlaying = isPlaying;
-				if (wasPlaying) {
-					onPlayPause(false);
-				}
+			const wasPlaying = isPlaying;
+			if (wasPlaying) {
+				onPlayPause(false);
+			}
 
+			try {
 				const sourceWidth = videoRef.videoWidth || 1920;
 				const sourceHeight = videoRef.videoHeight || 1080;
 				const aspectRatioValue =
@@ -215,10 +210,8 @@ export function useExport(deps: ExportDeps) {
 						const saveResult = await window.electronAPI.saveExportedVideo(arrayBuffer, fileName);
 
 						if (saveResult.canceled) {
-							setUnsavedExport({ arrayBuffer, fileName, format: "gif" });
 							toast.info("Export canceled");
 						} else if (saveResult.success && saveResult.path) {
-							setUnsavedExport(null);
 							handleExportSaved("GIF", saveResult.path);
 						} else {
 							setExportError(saveResult.message || "Failed to save GIF");
@@ -339,10 +332,8 @@ export function useExport(deps: ExportDeps) {
 						const saveResult = await window.electronAPI.saveExportedVideo(arrayBuffer, fileName);
 
 						if (saveResult.canceled) {
-							setUnsavedExport({ arrayBuffer, fileName, format: "mp4" });
 							toast.info("Export canceled");
 						} else if (saveResult.success && saveResult.path) {
-							setUnsavedExport(null);
 							handleExportSaved("Video", saveResult.path);
 						} else {
 							setExportError(saveResult.message || "Failed to save video");
@@ -352,10 +343,6 @@ export function useExport(deps: ExportDeps) {
 						setExportError(result.error || "Export failed");
 						toast.error(result.error || "Export failed");
 					}
-				}
-
-				if (wasPlaying) {
-					onPlayPause(true);
 				}
 			} catch (error) {
 				console.error("Export error:", error);
@@ -369,6 +356,9 @@ export function useExport(deps: ExportDeps) {
 					toast.error(t("errors.exportFailedWithError", { error: errorMessage }));
 				}
 			} finally {
+				if (wasPlaying) {
+					onPlayPause(true);
+				}
 				setIsExporting(false);
 				exporterRef.current = null;
 				setShowExportDialog(false);
