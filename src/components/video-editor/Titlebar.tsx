@@ -70,8 +70,8 @@ export default function Titlebar({
 			>
 				{/* App icon */}
 				<div className={`flex items-center gap-1.5 ${isMac ? "ml-14" : "ml-1"}`}>
-					<div className="w-5 h-5 rounded-[5px] bg-[#34B27B]/20 flex items-center justify-center">
-						<Video size={12} className="text-[#34B27B]" />
+					<div className="w-5 h-5 rounded-[5px] bg-brand/20 flex items-center justify-center">
+						<Video size={12} className="text-brand" />
 					</div>
 					<span className="text-[13px] font-semibold text-[#eceff6]">
 						{fileNameFromPath(videoPath)}
@@ -197,7 +197,7 @@ export default function Titlebar({
 				<button
 					type="button"
 					onClick={onExport}
-					className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#34B27B] text-white text-[11px] font-semibold hover:bg-[#34B27B]/90 shadow-[0_2px_12px_rgba(52,178,123,0.25)] transition-all duration-120"
+					className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-brand text-white text-[11px] font-semibold hover:bg-brand/90 shadow-[0_2px_12px_rgba(52,178,123,0.25)] transition-all duration-120"
 				>
 					<Download size={12} />
 					Export

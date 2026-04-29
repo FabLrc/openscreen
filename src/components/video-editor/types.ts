@@ -47,6 +47,8 @@ export interface TrimRegion {
 	endMs: number;
 }
 
+export type RowVariant = "zoom" | "trim" | "annotation" | "blur" | "speed";
+
 export type AnnotationType = "text" | "image" | "figure" | "blur";
 
 export type ArrowDirection =

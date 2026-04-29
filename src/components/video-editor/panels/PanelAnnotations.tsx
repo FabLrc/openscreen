@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { AnnotationSettingsPanel } from "../AnnotationSettingsPanel";
 import { BlurSettingsPanel } from "../BlurSettingsPanel";
@@ -6,6 +7,7 @@ import type { AnnotationRegion, AnnotationType, BlurData, FigureData } from "../
 interface PanelAnnotationsProps {
 	selectedAnnotationId?: string | null;
 	annotationRegions?: AnnotationRegion[];
+	onAnnotationSelect?: (id: string) => void;
 	onAnnotationContentChange?: (id: string, content: string) => void;
 	onAnnotationTypeChange?: (id: string, type: AnnotationType) => void;
 	onAnnotationStyleChange?: (id: string, style: Partial<AnnotationRegion["style"]>) => void;
@@ -14,6 +16,7 @@ interface PanelAnnotationsProps {
 	onAnnotationDelete?: (id: string) => void;
 	selectedBlurId?: string | null;
 	blurRegions?: AnnotationRegion[];
+	onBlurSelect?: (id: string) => void;
 	onBlurDataChange?: (id: string, blurData: BlurData) => void;
 	onBlurDataCommit?: () => void;
 	onBlurDelete?: (id: string) => void;
@@ -22,6 +25,7 @@ interface PanelAnnotationsProps {
 export default function PanelAnnotations({
 	selectedAnnotationId,
 	annotationRegions = [],
+	onAnnotationSelect,
 	onAnnotationContentChange,
 	onAnnotationTypeChange,
 	onAnnotationStyleChange,
@@ -30,6 +34,7 @@ export default function PanelAnnotations({
 	onAnnotationDelete,
 	selectedBlurId,
 	blurRegions = [],
+	onBlurSelect,
 	onBlurDataChange,
 	onBlurDataCommit,
 	onBlurDelete,
@@ -85,7 +90,7 @@ export default function PanelAnnotations({
 							<button
 								key={a.id}
 								type="button"
-								onClick={() => onAnnotationDelete?.(a.id)}
+								onClick={() => onAnnotationSelect?.(a.id)}
 								className={cn(
 									"w-full text-left px-2 py-1.5 rounded-lg text-[10px] transition-all border",
 									selectedAnnotationId === a.id
@@ -108,7 +113,7 @@ export default function PanelAnnotations({
 							<button
 								key={b.id}
 								type="button"
-								onClick={() => onBlurDelete?.(b.id)}
+								onClick={() => onBlurSelect?.(b.id)}
 								className={cn(
 									"w-full text-left px-2 py-1.5 rounded-lg text-[10px] transition-all border",
 									selectedBlurId === b.id
@@ -124,11 +129,7 @@ export default function PanelAnnotations({
 			)}
 
 			{annotationRegions.length === 0 && blurRegions.length === 0 && (
-				<div className="p-4 rounded-lg bg-white/[0.03] border border-white/[0.05]">
-					<span className="text-[10px] text-slate-400 leading-relaxed block">
-						Select an annotation or blur region on the timeline to edit its properties.
-					</span>
-				</div>
+				<EmptyState message="Select an annotation or blur region on the timeline to edit its properties." />
 			)}
 		</div>
 	);

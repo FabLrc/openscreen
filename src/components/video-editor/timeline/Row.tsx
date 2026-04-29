@@ -1,8 +1,9 @@
 import type { RowDefinition } from "dnd-timeline";
 import { useRow } from "dnd-timeline";
 import type { ReactNode } from "react";
+import type { RowVariant } from "../types";
 
-export type RowVariant = "zoom" | "trim" | "annotation" | "blur" | "speed";
+export type { RowVariant };
 
 const VARIANT_STYLES: Record<
 	RowVariant,

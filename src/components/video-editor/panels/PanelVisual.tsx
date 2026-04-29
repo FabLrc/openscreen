@@ -1,4 +1,5 @@
-import { Sparkles, Trash2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { Slider } from "@/components/ui/slider";
 import { useScopedT } from "@/contexts/I18nContext";
 import type { PlaybackSpeed, ZoomDepth, ZoomFocusMode } from "../types";
@@ -58,7 +59,7 @@ function SpeedChip({
 			onClick={onClick}
 			className={`
 				h-auto w-full rounded-lg border px-1 py-2 text-center shadow-sm transition-all text-xs font-semibold
-				${active ? "border-[#34B27B] bg-[#34B27B] text-white shadow-[#34B27B]/20" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"}
+				${active ? "border-brand bg-brand text-white shadow-brand/20" : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"}
 			`}
 		>
 			{children}
@@ -106,7 +107,7 @@ export default function PanelVisual({
 				<div className="flex items-center justify-between mb-2">
 					<span className="text-xs font-semibold text-slate-200">{t("zoom.level")}</span>
 					{zoomEnabled && selectedZoomDepth && (
-						<span className="text-[10px] uppercase tracking-wider font-medium text-[#34B27B] bg-[#34B27B]/10 px-2 py-0.5 rounded-full">
+						<span className="text-[10px] uppercase tracking-wider font-medium text-brand bg-brand/10 px-2 py-0.5 rounded-full">
 							{ZOOM_DEPTH_OPTIONS.find((o) => o.depth === selectedZoomDepth)?.label}
 						</span>
 					)}
@@ -123,7 +124,7 @@ export default function PanelVisual({
 								${zoomEnabled ? "opacity-100 cursor-pointer" : "opacity-40 cursor-not-allowed"}
 								${
 									selectedZoomDepth === option.depth
-										? "border-[#34B27B] bg-[#34B27B] text-white shadow-[#34B27B]/20"
+										? "border-brand bg-brand text-white shadow-brand/20"
 										: "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"
 								}
 							`}
@@ -150,7 +151,7 @@ export default function PanelVisual({
 										h-auto w-full rounded-lg border px-2 py-2 text-center shadow-sm transition-all text-xs font-semibold capitalize cursor-pointer
 										${
 											selectedZoomFocusMode === mode
-												? "border-[#34B27B] bg-[#34B27B] text-white shadow-[#34B27B]/20"
+												? "border-brand bg-brand text-white shadow-brand/20"
 												: "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10 hover:text-slate-200"
 										}
 									`}
@@ -162,25 +163,20 @@ export default function PanelVisual({
 					</div>
 				)}
 				{zoomEnabled && (
-					<button
+					<DeleteButton
 						onClick={() => selectedZoomId && onZoomDelete?.(selectedZoomId)}
-						className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-medium hover:bg-red-500/20 hover:border-red-500/30 transition-all"
-					>
-						<Trash2 className="w-3 h-3" />
-						{t("zoom.deleteZoom")}
-					</button>
+						label={t("zoom.deleteZoom")}
+						className="mt-2"
+					/>
 				)}
 			</div>
 
 			{/* Trim */}
 			{trimEnabled && (
-				<button
+				<DeleteButton
 					onClick={() => selectedTrimId && onTrimDelete?.(selectedTrimId)}
-					className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-medium hover:bg-red-500/20 hover:border-red-500/30 transition-all"
-				>
-					<Trash2 className="w-3 h-3" />
-					{t("trim.deleteRegion")}
-				</button>
+					label={t("trim.deleteRegion")}
+				/>
 			)}
 
 			{/* Speed */}
@@ -209,20 +205,18 @@ export default function PanelVisual({
 					<p className="text-[10px] text-slate-500 mt-2 text-center">{t("speed.selectRegion")}</p>
 				)}
 				{selectedSpeedId && (
-					<button
+					<DeleteButton
 						onClick={() => selectedSpeedId && onSpeedDelete?.(selectedSpeedId)}
-						className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-medium hover:bg-red-500/20 hover:border-red-500/30 transition-all"
-					>
-						<Trash2 className="w-3 h-3" />
-						{t("speed.deleteRegion")}
-					</button>
+						label={t("speed.deleteRegion")}
+						className="mt-2"
+					/>
 				)}
 			</div>
 
 			{/* Effects */}
 			<div>
 				<div className="flex items-center gap-2 mb-2">
-					<Sparkles className="w-3.5 h-3.5 text-[#34B27B]" />
+					<Sparkles className="w-3.5 h-3.5 text-brand" />
 					<span className="text-xs font-semibold text-slate-200">{t("effects.title")}</span>
 				</div>
 				<div className="space-y-2">
@@ -233,7 +227,7 @@ export default function PanelVisual({
 							onClick={() => onBlurChange?.(!showBlur)}
 							className={`
 								w-8 h-[18px] rounded-full relative transition-all border cursor-pointer
-								${showBlur ? "bg-[#34B27B] border-[#34B27B]" : "bg-white/10 border-white/10"}
+								${showBlur ? "bg-brand border-brand" : "bg-white/10 border-white/10"}
 							`}
 						>
 							<div
@@ -307,7 +301,7 @@ export default function PanelVisual({
 								min={min}
 								max={max}
 								step={step}
-								className="w-full [&_[role=slider]]:bg-[#34B27B] [&_[role=slider]]:border-[#34B27B] [&_[role=slider]]:h-3 [&_[role=slider]]:w-3"
+								size="sm"
 							/>
 						</div>
 					))}

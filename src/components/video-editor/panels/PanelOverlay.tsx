@@ -40,7 +40,7 @@ export default function PanelOverlay({
 			{hasWebcam && (
 				<div>
 					<div className="flex items-center gap-2 mb-2">
-						<Sparkles className="w-3.5 h-3.5 text-[#34B27B]" />
+						<Sparkles className="w-3.5 h-3.5 text-brand" />
 						<span className="text-xs font-semibold text-slate-200">{t("layout.title")}</span>
 					</div>
 					<div className="space-y-2">
@@ -62,7 +62,7 @@ export default function PanelOverlay({
 										className={cn(
 											"w-full text-left px-2.5 py-2 rounded-lg border text-[10px] font-medium transition-all",
 											webcamLayoutPreset === preset.value
-												? "bg-[#34B27B]/10 border-[#34B27B]/40 text-[#34B27B]"
+												? "bg-brand/10 border-brand/40 text-brand"
 												: "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20",
 										)}
 									>
@@ -98,7 +98,7 @@ export default function PanelOverlay({
 											className={cn(
 												"h-10 rounded-lg border flex flex-col items-center justify-center gap-0.5 transition-all",
 												webcamMaskShape === shape.value
-													? "bg-[#34B27B] border-[#34B27B] text-white"
+													? "bg-brand border-brand text-white"
 													: "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400",
 											)}
 										>
@@ -163,7 +163,7 @@ export default function PanelOverlay({
 									min={10}
 									max={50}
 									step={1}
-									className="w-full [&_[role=slider]]:bg-[#34B27B] [&_[role=slider]]:border-[#34B27B] [&_[role=slider]]:h-3 [&_[role=slider]]:w-3"
+									size="sm"
 								/>
 							</div>
 						)}

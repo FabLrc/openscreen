@@ -93,7 +93,7 @@ export default function PlaybackBar({
 						"h-8 w-8 rounded-full transition-all duration-200 border",
 						isPlaying
 							? "bg-white/10 text-white border-white/10 hover:bg-white/20"
-							: "bg-[#34B27B] text-white border-[#34B27B] hover:bg-[#2d9e6d] hover:scale-105",
+							: "bg-brand text-white border-brand hover:bg-[#2d9e6d] hover:scale-105",
 					)}
 					aria-label={isPlaying ? tCommon("playback.pause") : tCommon("playback.play")}
 				>
@@ -124,7 +124,7 @@ export default function PlaybackBar({
 			{/* Center: Seek bar */}
 			<div className="flex-1 relative h-6 flex items-center group">
 				<div className="absolute left-0 right-0 h-1 bg-white/10 rounded-full overflow-hidden">
-					<div className="h-full bg-[#34B27B] rounded-full" style={{ width: `${progress}%` }} />
+					<div className="h-full bg-brand rounded-full" style={{ width: `${progress}%` }} />
 				</div>
 				<input
 					type="range"
@@ -151,7 +151,7 @@ export default function PlaybackBar({
 					disabled={!hasVideo}
 					variant="ghost"
 					size="icon"
-					className="h-8 w-8 text-slate-400 hover:text-[#34B27B] hover:bg-[#34B27B]/10 transition-all disabled:opacity-30"
+					className="h-8 w-8 text-slate-400 hover:text-brand hover:bg-brand/10 transition-all disabled:opacity-30"
 					title="Auto-enhance"
 				>
 					<WandSparkles className="w-4 h-4" />
@@ -181,7 +181,7 @@ export default function PlaybackBar({
 					disabled={!hasVideo}
 					variant="ghost"
 					size="icon"
-					className="h-8 w-8 text-slate-400 hover:text-[#34B27B] hover:bg-[#34B27B]/10 transition-all disabled:opacity-30"
+					className="h-8 w-8 text-slate-400 hover:text-brand hover:bg-brand/10 transition-all disabled:opacity-30"
 					title="Zoom"
 				>
 					<ZoomIn className="w-4 h-4" />

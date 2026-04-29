@@ -20,7 +20,6 @@ interface TimelineWrapperProps {
 	onRangeChange: Dispatch<SetStateAction<Range>>;
 	minItemDurationMs: number;
 	minVisibleRangeMs: number;
-	gridSizeMs?: number;
 	onItemSpanChange: (id: string, span: Span) => void;
 	allRegionSpans?: { id: string; start: number; end: number }[];
 }
@@ -33,7 +32,6 @@ export default function TimelineWrapper({
 	onRangeChange,
 	minItemDurationMs,
 	minVisibleRangeMs,
-	gridSizeMs: _gridSizeMs,
 	onItemSpanChange,
 	allRegionSpans = [],
 }: TimelineWrapperProps) {

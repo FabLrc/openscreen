@@ -1,5 +1,6 @@
-import { Crop, Scissors, Trash2 } from "lucide-react";
+import { Crop, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { useScopedT } from "@/contexts/I18nContext";
 import type { TrimRegion } from "../types";
 
@@ -29,7 +30,7 @@ export default function PanelEdit({ trimRegions, selectedTrimId, onTrimDelete }:
 			{/* Crop */}
 			<div>
 				<div className="flex items-center gap-2 mb-2">
-					<Crop className="w-3.5 h-3.5 text-[#34B27B]" />
+					<Crop className="w-3.5 h-3.5 text-brand" />
 					<span className="text-xs font-semibold text-slate-200">{t("crop.title")}</span>
 				</div>
 				<div className="grid grid-cols-4 gap-1 mb-2">
@@ -56,7 +57,7 @@ export default function PanelEdit({ trimRegions, selectedTrimId, onTrimDelete }:
 			{selectedTrim && (
 				<div>
 					<div className="flex items-center gap-2 mb-2">
-						<Scissors className="w-3.5 h-3.5 text-[#34B27B]" />
+						<Scissors className="w-3.5 h-3.5 text-brand" />
 						<span className="text-xs font-semibold text-slate-200">Trim</span>
 					</div>
 					<div className="space-y-1.5 mb-3">
@@ -77,13 +78,10 @@ export default function PanelEdit({ trimRegions, selectedTrimId, onTrimDelete }:
 							</span>
 						</div>
 					</div>
-					<button
+					<DeleteButton
 						onClick={() => selectedTrimId && onTrimDelete?.(selectedTrimId)}
-						className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-medium hover:bg-red-500/20 hover:border-red-500/30 transition-all"
-					>
-						<Trash2 className="w-3 h-3" />
-						{t("trim.deleteRegion")}
-					</button>
+						label={t("trim.deleteRegion")}
+					/>
 				</div>
 			)}
 		</div>

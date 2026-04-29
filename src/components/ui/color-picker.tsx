@@ -57,8 +57,8 @@ export function ColorPicker({ value, presets = [], onChange, className }: ColorP
 									className={cn(
 										"aspect-square w-7 h-7 rounded-md border-2 cursor-pointer transition-all duration-200",
 										currentHex.toLowerCase() === presetHex.toLowerCase()
-											? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
-											: "border-white/10 hover:border-[#34B27B]/40",
+											? "border-brand ring-1 ring-brand/30"
+											: "border-white/10 hover:border-brand/40",
 									)}
 									style={{ background: c }}
 									onClick={() => {

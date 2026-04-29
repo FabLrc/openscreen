@@ -64,7 +64,7 @@ export default function CommandPalette({ open, onOpenChange, commands }: Command
 												cmd.onSelect();
 												onOpenChange(false);
 											}}
-											className="text-slate-200 data-[selected=true]:bg-[#34B27B]/10 data-[selected=true]:text-slate-100"
+											className="text-slate-200 data-[selected=true]:bg-brand/10 data-[selected=true]:text-slate-100"
 										>
 											{cmd.icon}
 											<span>{cmd.label}</span>

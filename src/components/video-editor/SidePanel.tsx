@@ -62,7 +62,7 @@ export default function SidePanel({
 			/>
 			{/* Header */}
 			<div className="px-3.5 py-2.5 border-b border-white/[0.06] flex items-center gap-2 flex-shrink-0">
-				<span className="text-[#34B27B]">{tab.icon}</span>
+				<span className="text-brand">{tab.icon}</span>
 				<span className="text-[13px] font-semibold text-[#eceff6]">{tab.label}</span>
 				<button
 					type="button"

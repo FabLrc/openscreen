@@ -101,19 +101,19 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 				<TabsList className="mb-3 bg-white/5 border border-white/5 p-0.5 w-full grid grid-cols-3 h-7 rounded-lg">
 					<TabsTrigger
 						value="gradient"
-						className="data-[state=active]:bg-[#34B27B] data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
+						className="data-[state=active]:bg-brand data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
 					>
 						{t("background.gradient")}
 					</TabsTrigger>
 					<TabsTrigger
 						value="color"
-						className="data-[state=active]:bg-[#34B27B] data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
+						className="data-[state=active]:bg-brand data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
 					>
 						{t("background.color")}
 					</TabsTrigger>
 					<TabsTrigger
 						value="image"
-						className="data-[state=active]:bg-[#34B27B] data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
+						className="data-[state=active]:bg-brand data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
 					>
 						{t("background.image")}
 					</TabsTrigger>
@@ -127,8 +127,8 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 								className={cn(
 									"aspect-square w-9 h-9 rounded-md border-2 overflow-hidden cursor-pointer transition-all duration-200 shadow-sm",
 									gradient === g
-										? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
-										: "border-white/10 hover:border-[#34B27B]/40 opacity-80 hover:opacity-100 bg-white/5",
+										? "border-brand ring-1 ring-brand/30"
+										: "border-white/10 hover:border-brand/40 opacity-80 hover:opacity-100 bg-white/5",
 								)}
 								style={{ background: g }}
 								onClick={() => {
@@ -163,7 +163,7 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 					<Button
 						onClick={() => fileInputRef.current?.click()}
 						variant="outline"
-						className="w-full gap-1.5 bg-white/5 text-slate-200 border-white/10 hover:bg-[#34B27B] hover:text-white hover:border-[#34B27B] transition-all h-7 text-[10px]"
+						className="w-full gap-1.5 bg-white/5 text-slate-200 border-white/10 hover:bg-brand hover:text-white hover:border-brand transition-all h-7 text-[10px]"
 					>
 						<Upload className="w-3 h-3" />
 						{t("background.uploadCustom")}
@@ -177,8 +177,8 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 									className={cn(
 										"aspect-square w-9 h-9 rounded-md border-2 overflow-hidden cursor-pointer transition-all duration-200 relative group shadow-sm",
 										isSelected
-											? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
-											: "border-white/10 hover:border-[#34B27B]/40 opacity-80 hover:opacity-100 bg-white/5",
+											? "border-brand ring-1 ring-brand/30"
+											: "border-white/10 hover:border-brand/40 opacity-80 hover:opacity-100 bg-white/5",
 									)}
 									style={{
 										backgroundImage: `url(${imageUrl})`,
@@ -206,8 +206,8 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 									className={cn(
 										"aspect-square w-9 h-9 rounded-md border-2 overflow-hidden cursor-pointer transition-all duration-200 shadow-sm",
 										isSelected
-											? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
-											: "border-white/10 hover:border-[#34B27B]/40 opacity-80 hover:opacity-100 bg-white/5",
+											? "border-brand ring-1 ring-brand/30"
+											: "border-white/10 hover:border-brand/40 opacity-80 hover:opacity-100 bg-white/5",
 									)}
 									style={{
 										backgroundImage: `url(${previewUrl})`,

@@ -34,23 +34,11 @@ import {
 import { useI18n, useScopedT } from "@/contexts/I18nContext";
 import { useShortcuts } from "@/contexts/ShortcutsContext";
 import { INITIAL_EDITOR_STATE, useEditorHistory } from "@/hooks/useEditorHistory";
-import {
-	calculateOutputDimensions,
-	type ExportFormat,
-	type ExportProgress,
-	type ExportQuality,
-	type ExportSettings,
-	GIF_SIZE_PRESETS,
-	GifExporter,
-	type GifFrameRate,
-	type GifSizePreset,
-	VideoExporter,
-} from "@/lib/exporter";
+import { useExport } from "@/hooks/useExport";
 import { computeFrameStepTime } from "@/lib/frameStep";
 import type { ProjectMedia } from "@/lib/recordingSession";
 import { matchesShortcut } from "@/lib/shortcuts";
 import { loadUserPreferences, saveUserPreferences } from "@/lib/userPreferences";
-import { BackgroundLoadError } from "@/lib/wallpaper";
 import {
 	getAspectRatioValue,
 	getNativeAspectRatioValue,
@@ -159,27 +147,11 @@ export default function VideoEditor() {
 	const [selectedSpeedId, setSelectedSpeedId] = useState<string | null>(null);
 	const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 	const [selectedBlurId, setSelectedBlurId] = useState<string | null>(null);
-	const [isExporting, setIsExporting] = useState(false);
-	const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
-	const [exportError, setExportError] = useState<string | null>(null);
-	const [showExportDialog, setShowExportDialog] = useState(false);
 	const [activeTab, setActiveTab] = useState<string | null>(null);
 	const [sidePanelWidth, setSidePanelWidth] = useState(244);
 	const [showNewRecordingDialog, setShowNewRecordingDialog] = useState(false);
 	const [showCommandPalette, setShowCommandPalette] = useState(false);
-	const [exportQuality, setExportQuality] = useState<ExportQuality>("good");
-	const [exportFormat, setExportFormat] = useState<ExportFormat>("mp4");
-	const [gifFrameRate, setGifFrameRate] = useState<GifFrameRate>(15);
-	const [gifLoop, setGifLoop] = useState(true);
-	const [gifSizePreset, setGifSizePreset] = useState<GifSizePreset>("medium");
-	const [exportedFilePath, setExportedFilePath] = useState<string | null>(null);
 	const [lastSavedSnapshot, setLastSavedSnapshot] = useState<string | null>(null);
-
-	const [_unsavedExport, setUnsavedExport] = useState<{
-		arrayBuffer: ArrayBuffer;
-		fileName: string;
-		format: string;
-	} | null>(null);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
 	const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -198,7 +170,51 @@ export default function VideoEditor() {
 
 	const nextAnnotationIdRef = useRef(1);
 	const nextAnnotationZIndexRef = useRef(1);
-	const exporterRef = useRef<VideoExporter | null>(null);
+
+	const exportApi = useExport({
+		isPlaying,
+		videoPath,
+		webcamVideoPath,
+		wallpaper,
+		zoomRegions,
+		trimRegions,
+		speedRegions,
+		shadowIntensity,
+		showBlur,
+		motionBlurAmount,
+		borderRadius,
+		padding,
+		cropRegion,
+		annotationRegions,
+		aspectRatio,
+		webcamLayoutPreset,
+		webcamMaskShape,
+		webcamSizePreset,
+		webcamPosition,
+		cursorTelemetry,
+		t,
+		rawT,
+		onPlayPause: (shouldPlay) => {
+			if (shouldPlay) {
+				videoPlaybackRef.current?.play().catch(console.error);
+			} else {
+				videoPlaybackRef.current?.pause();
+			}
+		},
+	});
+
+	const {
+		exportQuality,
+		exportFormat,
+		gifFrameRate,
+		gifLoop,
+		gifSizePreset,
+		isExporting,
+		exportProgress,
+		exportError,
+		showExportDialog,
+		exportedFilePath,
+	} = exportApi.exportState;
 
 	const annotationOnlyRegions = useMemo(
 		() => annotationRegions.filter((region) => region.type !== "blur"),
@@ -278,11 +294,11 @@ export default function VideoEditor() {
 				webcamSizePreset: normalizedEditor.webcamSizePreset,
 				webcamPosition: normalizedEditor.webcamPosition,
 			});
-			setExportQuality(normalizedEditor.exportQuality);
-			setExportFormat(normalizedEditor.exportFormat);
-			setGifFrameRate(normalizedEditor.gifFrameRate);
-			setGifLoop(normalizedEditor.gifLoop);
-			setGifSizePreset(normalizedEditor.gifSizePreset);
+			exportApi.setExportQuality(normalizedEditor.exportQuality);
+			exportApi.setExportFormat(normalizedEditor.exportFormat);
+			exportApi.setGifFrameRate(normalizedEditor.gifFrameRate);
+			exportApi.setGifLoop(normalizedEditor.gifLoop);
+			exportApi.setGifSizePreset(normalizedEditor.gifSizePreset);
 
 			setSelectedZoomId(null);
 			setSelectedTrimId(null);
@@ -452,15 +468,20 @@ export default function VideoEditor() {
 			padding: prefs.padding,
 			aspectRatio: prefs.aspectRatio,
 		});
-		setExportQuality(prefs.exportQuality);
-		setExportFormat(prefs.exportFormat);
+		exportApi.setExportQuality(prefs.exportQuality);
+		exportApi.setExportFormat(prefs.exportFormat);
 		setPrefsHydrated(true);
 	}, [updateState]);
 
 	// Auto-save user preferences when settings change
 	useEffect(() => {
 		if (!prefsHydrated) return;
-		saveUserPreferences({ padding, aspectRatio, exportQuality, exportFormat });
+		saveUserPreferences({
+			padding,
+			aspectRatio,
+			exportQuality: exportQuality,
+			exportFormat: exportFormat,
+		});
 	}, [prefsHydrated, padding, aspectRatio, exportQuality, exportFormat]);
 
 	const saveProject = useCallback(
@@ -1491,444 +1512,64 @@ export default function VideoEditor() {
 		}
 	}, [selectedSpeedId, speedRegions]);
 
-	const handleShowExportedFile = useCallback(async (filePath: string) => {
-		try {
-			const result = await window.electronAPI.revealInFolder(filePath);
-			if (!result.success) {
-				const errorMessage = result.error || result.message || "Failed to reveal item in folder.";
-				console.error("Failed to reveal in folder:", errorMessage);
-				toast.error(errorMessage);
-			}
-		} catch (error) {
-			const errorMessage = String(error);
-			console.error("Error calling revealInFolder IPC:", errorMessage);
-			toast.error(`Error revealing in folder: ${errorMessage}`);
-		}
-	}, []);
-
-	const handleExportSaved = useCallback(
-		(formatLabel: "GIF" | "Video", filePath: string) => {
-			setExportedFilePath(filePath);
-			toast.success(
-				t("export.exportedSuccessfully", {
-					format: formatLabel,
-				}),
-				{
-					description: filePath,
-					action: {
-						label: rawT("common.actions.showInFolder"),
-						onClick: () => {
-							void handleShowExportedFile(filePath);
-						},
-					},
-				},
-			);
-		},
-		[handleShowExportedFile, t, rawT],
-	);
-
-	const handleExport = useCallback(
-		async (settings: ExportSettings) => {
-			if (!videoPath) {
-				toast.error("No video loaded");
-				return;
-			}
-
-			const video = videoPlaybackRef.current?.video;
-			if (!video) {
-				toast.error("Video not ready");
-				return;
-			}
-
-			setIsExporting(true);
-			setExportProgress(null);
-			setExportError(null);
-			setExportedFilePath(null);
-
-			try {
-				const wasPlaying = isPlaying;
-				if (wasPlaying) {
-					videoPlaybackRef.current?.pause();
-				}
-
-				const sourceWidth = video.videoWidth || 1920;
-				const sourceHeight = video.videoHeight || 1080;
-				const aspectRatioValue =
-					aspectRatio === "native"
-						? getNativeAspectRatioValue(sourceWidth, sourceHeight, cropRegion)
-						: getAspectRatioValue(aspectRatio);
-
-				// Get preview CONTAINER dimensions for scaling
-				const playbackRef = videoPlaybackRef.current;
-				const containerElement = playbackRef?.containerRef?.current;
-				const previewWidth = containerElement?.clientWidth || 1920;
-				const previewHeight = containerElement?.clientHeight || 1080;
-
-				if (settings.format === "gif" && settings.gifConfig) {
-					// GIF Export
-					const gifExporter = new GifExporter({
-						videoUrl: videoPath,
-						webcamVideoUrl: webcamVideoPath || undefined,
-						width: settings.gifConfig.width,
-						height: settings.gifConfig.height,
-						frameRate: settings.gifConfig.frameRate,
-						loop: settings.gifConfig.loop,
-						sizePreset: settings.gifConfig.sizePreset,
-						wallpaper,
-						zoomRegions,
-						trimRegions,
-						speedRegions,
-						showShadow: shadowIntensity > 0,
-						shadowIntensity,
-						showBlur,
-						motionBlurAmount,
-						borderRadius,
-						padding,
-						videoPadding: padding,
-						cropRegion,
-						annotationRegions,
-						webcamLayoutPreset,
-						webcamMaskShape,
-						webcamSizePreset,
-						webcamPosition,
-						previewWidth,
-						previewHeight,
-						cursorTelemetry,
-						onProgress: (progress: ExportProgress) => {
-							setExportProgress(progress);
-						},
-					});
-
-					exporterRef.current = gifExporter as unknown as VideoExporter;
-					const result = await gifExporter.export();
-
-					if (result.success && result.blob) {
-						const arrayBuffer = await result.blob.arrayBuffer();
-						const timestamp = Date.now();
-						const fileName = `export-${timestamp}.gif`;
-
-						const saveResult = await window.electronAPI.saveExportedVideo(arrayBuffer, fileName);
-
-						if (saveResult.canceled) {
-							setUnsavedExport({ arrayBuffer, fileName, format: "gif" });
-							toast.info("Export canceled");
-						} else if (saveResult.success && saveResult.path) {
-							setUnsavedExport(null);
-							handleExportSaved("GIF", saveResult.path);
-						} else {
-							setExportError(saveResult.message || "Failed to save GIF");
-							toast.error(saveResult.message || "Failed to save GIF");
-						}
-					} else {
-						setExportError(result.error || "GIF export failed");
-						toast.error(result.error || "GIF export failed");
-					}
-				} else {
-					// MP4 Export
-					const quality = settings.quality || exportQuality;
-					let exportWidth: number;
-					let exportHeight: number;
-					let bitrate: number;
-
-					if (quality === "source") {
-						// Use source resolution
-						exportWidth = sourceWidth;
-						exportHeight = sourceHeight;
-
-						if (aspectRatioValue === 1) {
-							// Square (1:1): use smaller dimension to avoid codec limits
-							const baseDimension = Math.floor(Math.min(sourceWidth, sourceHeight) / 2) * 2;
-							exportWidth = baseDimension;
-							exportHeight = baseDimension;
-						} else if (aspectRatioValue > 1) {
-							// Landscape: find largest even dimensions that exactly match aspect ratio
-							const baseWidth = Math.floor(sourceWidth / 2) * 2;
-							let found = false;
-							for (let w = baseWidth; w >= 100 && !found; w -= 2) {
-								const h = Math.round(w / aspectRatioValue);
-								if (h % 2 === 0 && Math.abs(w / h - aspectRatioValue) < 0.0001) {
-									exportWidth = w;
-									exportHeight = h;
-									found = true;
-								}
-							}
-							if (!found) {
-								exportWidth = baseWidth;
-								exportHeight = Math.floor(baseWidth / aspectRatioValue / 2) * 2;
-							}
-						} else {
-							// Portrait: find largest even dimensions that exactly match aspect ratio
-							const baseHeight = Math.floor(sourceHeight / 2) * 2;
-							let found = false;
-							for (let h = baseHeight; h >= 100 && !found; h -= 2) {
-								const w = Math.round(h * aspectRatioValue);
-								if (w % 2 === 0 && Math.abs(w / h - aspectRatioValue) < 0.0001) {
-									exportWidth = w;
-									exportHeight = h;
-									found = true;
-								}
-							}
-							if (!found) {
-								exportHeight = baseHeight;
-								exportWidth = Math.floor((baseHeight * aspectRatioValue) / 2) * 2;
-							}
-						}
-
-						// Calculate visually lossless bitrate matching screen recording optimization
-						const totalPixels = exportWidth * exportHeight;
-						bitrate = 30_000_000;
-						if (totalPixels > 1920 * 1080 && totalPixels <= 2560 * 1440) {
-							bitrate = 50_000_000;
-						} else if (totalPixels > 2560 * 1440) {
-							bitrate = 80_000_000;
-						}
-					} else {
-						// Use quality-based target resolution
-						const targetHeight = quality === "medium" ? 720 : 1080;
-
-						// Calculate dimensions maintaining aspect ratio
-						exportHeight = Math.floor(targetHeight / 2) * 2;
-						exportWidth = Math.floor((exportHeight * aspectRatioValue) / 2) * 2;
-
-						// Adjust bitrate for lower resolutions
-						const totalPixels = exportWidth * exportHeight;
-						if (totalPixels <= 1280 * 720) {
-							bitrate = 10_000_000;
-						} else if (totalPixels <= 1920 * 1080) {
-							bitrate = 20_000_000;
-						} else {
-							bitrate = 30_000_000;
-						}
-					}
-
-					const exporter = new VideoExporter({
-						videoUrl: videoPath,
-						webcamVideoUrl: webcamVideoPath || undefined,
-						width: exportWidth,
-						height: exportHeight,
-						frameRate: 60,
-						bitrate,
-						codec: "avc1.640033",
-						wallpaper,
-						zoomRegions,
-						trimRegions,
-						speedRegions,
-						showShadow: shadowIntensity > 0,
-						shadowIntensity,
-						showBlur,
-						motionBlurAmount,
-						borderRadius,
-						padding,
-						cropRegion,
-						annotationRegions,
-						webcamLayoutPreset,
-						webcamMaskShape,
-						webcamSizePreset,
-						webcamPosition,
-						previewWidth,
-						previewHeight,
-						cursorTelemetry,
-						onProgress: (progress: ExportProgress) => {
-							setExportProgress(progress);
-						},
-					});
-
-					exporterRef.current = exporter;
-					const result = await exporter.export();
-
-					if (result.success && result.blob) {
-						const arrayBuffer = await result.blob.arrayBuffer();
-						const timestamp = Date.now();
-						const fileName = `export-${timestamp}.mp4`;
-
-						const saveResult = await window.electronAPI.saveExportedVideo(arrayBuffer, fileName);
-
-						if (saveResult.canceled) {
-							setUnsavedExport({ arrayBuffer, fileName, format: "mp4" });
-							toast.info("Export canceled");
-						} else if (saveResult.success && saveResult.path) {
-							setUnsavedExport(null);
-							handleExportSaved("Video", saveResult.path);
-						} else {
-							setExportError(saveResult.message || "Failed to save video");
-							toast.error(saveResult.message || "Failed to save video");
-						}
-					} else {
-						setExportError(result.error || "Export failed");
-						toast.error(result.error || "Export failed");
-					}
-				}
-
-				if (wasPlaying) {
-					videoPlaybackRef.current?.play();
-				}
-			} catch (error) {
-				console.error("Export error:", error);
-				if (error instanceof BackgroundLoadError) {
-					const message = t("errors.exportBackgroundLoadFailed", { url: error.displayUrl });
-					setExportError(message);
-					toast.error(message);
-				} else {
-					const errorMessage = error instanceof Error ? error.message : "Unknown error";
-					setExportError(errorMessage);
-					toast.error(t("errors.exportFailedWithError", { error: errorMessage }));
-				}
-			} finally {
-				setIsExporting(false);
-				exporterRef.current = null;
-				// Reset dialog state to ensure it can be opened again on next export
-				// This fixes the bug where second export doesn't show save dialog
-				setShowExportDialog(false);
-				setExportProgress(null);
-			}
-		},
-		[
-			videoPath,
-			webcamVideoPath,
-			wallpaper,
-			zoomRegions,
-			trimRegions,
-			speedRegions,
-			shadowIntensity,
-			showBlur,
-			motionBlurAmount,
-			borderRadius,
-			padding,
-			cropRegion,
-			annotationRegions,
-			isPlaying,
-			aspectRatio,
-			webcamLayoutPreset,
-			webcamMaskShape,
-			webcamSizePreset,
-			webcamPosition,
-			exportQuality,
-			handleExportSaved,
-			cursorTelemetry,
-			t,
-		],
-	);
-
-	const handleOpenExportDialog = useCallback(() => {
-		if (!videoPath) {
-			toast.error("No video loaded");
-			return;
-		}
-
+	const handleExportClick = useCallback(() => {
 		const video = videoPlaybackRef.current?.video;
-		if (!video) {
-			toast.error("Video not ready");
-			return;
-		}
-
-		// Build export settings from current state
-		const sourceWidth = video.videoWidth || 1920;
-		const sourceHeight = video.videoHeight || 1080;
-		const aspectRatioValue =
-			aspectRatio === "native"
-				? getNativeAspectRatioValue(sourceWidth, sourceHeight, cropRegion)
-				: getAspectRatioValue(aspectRatio);
-		const gifDimensions = calculateOutputDimensions(
-			sourceWidth,
-			sourceHeight,
-			gifSizePreset,
-			GIF_SIZE_PRESETS,
-			aspectRatioValue,
-		);
-
-		const settings: ExportSettings = {
-			format: exportFormat,
-			quality: exportFormat === "mp4" ? exportQuality : undefined,
-			gifConfig:
-				exportFormat === "gif"
-					? {
-							frameRate: gifFrameRate,
-							loop: gifLoop,
-							sizePreset: gifSizePreset,
-							width: gifDimensions.width,
-							height: gifDimensions.height,
-						}
-					: undefined,
-		};
-
-		setShowExportDialog(true);
-		setExportError(null);
-		setExportedFilePath(null);
-
-		// Start export immediately
-		handleExport(settings);
-	}, [
-		videoPath,
-		exportFormat,
-		exportQuality,
-		gifFrameRate,
-		gifLoop,
-		gifSizePreset,
-		aspectRatio,
-		cropRegion,
-		handleExport,
-	]);
-
-	const handleCancelExport = useCallback(() => {
-		if (exporterRef.current) {
-			exporterRef.current.cancel();
-			toast.info("Export canceled");
-			setShowExportDialog(false);
-			setIsExporting(false);
-			setExportProgress(null);
-			setExportError(null);
-			setExportedFilePath(null);
-		}
-	}, []);
+		if (!video) return;
+		exportApi.handleOpenExportDialog({
+			currentTime: video.currentTime,
+			videoWidth: video.videoWidth,
+			videoHeight: video.videoHeight,
+		});
+	}, [exportApi.handleOpenExportDialog]);
 
 	const commands = useMemo(
 		() => [
 			{
 				id: "nav-visual",
 				label: tp("items.navVisual"),
-				icon: <Sparkles className="text-[#34B27B]" />,
+				icon: <Sparkles className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("visual"),
 			},
 			{
 				id: "nav-bg",
 				label: tp("items.navBackground"),
-				icon: <Image className="text-[#34B27B]" />,
+				icon: <Image className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("bg"),
 			},
 			{
 				id: "nav-audio",
 				label: tp("items.navAudio"),
-				icon: <Volume2 className="text-[#34B27B]" />,
+				icon: <Volume2 className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("audio"),
 			},
 			{
 				id: "nav-overlay",
 				label: tp("items.navOverlay"),
-				icon: <Layers className="text-[#34B27B]" />,
+				icon: <Layers className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("overlay"),
 			},
 			{
 				id: "nav-annotations",
 				label: tp("items.navAnnotations"),
-				icon: <PenLine className="text-[#34B27B]" />,
+				icon: <PenLine className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("annotations"),
 			},
 			{
 				id: "nav-edit",
 				label: tp("items.navEdit"),
-				icon: <Scissors className="text-[#34B27B]" />,
+				icon: <Scissors className="text-brand" />,
 				category: "navigation" as const,
 				onSelect: () => setActiveTab("edit"),
 			},
 			{
 				id: "tool-zoom",
 				label: tp("items.toolZoom"),
-				icon: <ZoomIn className="text-[#34B27B]" />,
+				icon: <ZoomIn className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["add zoom", "zoom region"],
 				shortcut: "Z",
@@ -1937,7 +1578,7 @@ export default function VideoEditor() {
 			{
 				id: "tool-speed",
 				label: tp("items.toolSpeed"),
-				icon: <Zap className="text-[#34B27B]" />,
+				icon: <Zap className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["add speed", "speed region"],
 				shortcut: "S",
@@ -1946,7 +1587,7 @@ export default function VideoEditor() {
 			{
 				id: "tool-text",
 				label: tp("items.toolText"),
-				icon: <Type className="text-[#34B27B]" />,
+				icon: <Type className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["add text", "annotation"],
 				shortcut: "A",
@@ -1955,7 +1596,7 @@ export default function VideoEditor() {
 			{
 				id: "tool-audio",
 				label: tp("items.toolAudio"),
-				icon: <Music className="text-[#34B27B]" />,
+				icon: <Music className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["add audio", "background music"],
 				onSelect: () => setActiveTab("audio"),
@@ -1963,7 +1604,7 @@ export default function VideoEditor() {
 			{
 				id: "tool-webcam",
 				label: tp("items.toolWebcam"),
-				icon: <Video className="text-[#34B27B]" />,
+				icon: <Video className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["webcam pip", "picture in picture", "camera"],
 				onSelect: () => setActiveTab("overlay"),
@@ -1971,7 +1612,7 @@ export default function VideoEditor() {
 			{
 				id: "tool-auto-enhance",
 				label: tp("items.toolAutoEnhance"),
-				icon: <WandSparkles className="text-[#34B27B]" />,
+				icon: <WandSparkles className="text-brand" />,
 				category: "tools" as const,
 				keywords: ["auto enhance", "auto zoom", "suggestions"],
 				onSelect: handleSuggestZoomsFromBar,
@@ -1979,15 +1620,15 @@ export default function VideoEditor() {
 			{
 				id: "action-export",
 				label: tp("items.actionExport"),
-				icon: <Download className="text-[#34B27B]" />,
+				icon: <Download className="text-brand" />,
 				category: "actions" as const,
 				keywords: ["mp4", "gif", "render", "save video"],
-				onSelect: handleOpenExportDialog,
+				onSelect: handleExportClick,
 			},
 			{
 				id: "action-new-recording",
 				label: tp("items.actionNewRecording"),
-				icon: <Video className="text-[#34B27B]" />,
+				icon: <Video className="text-brand" />,
 				category: "actions" as const,
 				keywords: ["new recording", "record screen"],
 				onSelect: () => setShowNewRecordingDialog(true),
@@ -1995,7 +1636,7 @@ export default function VideoEditor() {
 			{
 				id: "action-save",
 				label: tp("items.actionSave"),
-				icon: <Save className="text-[#34B27B]" />,
+				icon: <Save className="text-brand" />,
 				category: "actions" as const,
 				keywords: ["save project", "save"],
 				onSelect: handleSaveProject,
@@ -2003,7 +1644,7 @@ export default function VideoEditor() {
 			{
 				id: "action-load",
 				label: tp("items.actionLoad"),
-				icon: <FolderOpen className="text-[#34B27B]" />,
+				icon: <FolderOpen className="text-brand" />,
 				category: "actions" as const,
 				keywords: ["load project", "open project"],
 				onSelect: handleLoadProject,
@@ -2011,7 +1652,7 @@ export default function VideoEditor() {
 			{
 				id: "action-undo",
 				label: tp("items.actionUndo"),
-				icon: <Undo2 className="text-[#34B27B]" />,
+				icon: <Undo2 className="text-brand" />,
 				category: "actions" as const,
 				shortcut: "⌘Z",
 				onSelect: undo,
@@ -2019,7 +1660,7 @@ export default function VideoEditor() {
 			{
 				id: "action-redo",
 				label: tp("items.actionRedo"),
-				icon: <Redo2 className="text-[#34B27B]" />,
+				icon: <Redo2 className="text-brand" />,
 				category: "actions" as const,
 				shortcut: "⌘⇧Z",
 				onSelect: redo,
@@ -2027,7 +1668,7 @@ export default function VideoEditor() {
 			{
 				id: "action-fullscreen",
 				label: tp("items.actionFullscreen"),
-				icon: <Maximize className="text-[#34B27B]" />,
+				icon: <Maximize className="text-brand" />,
 				category: "actions" as const,
 				keywords: ["full screen", "maximize"],
 				onSelect: toggleFullscreen,
@@ -2035,7 +1676,7 @@ export default function VideoEditor() {
 			{
 				id: "setting-shortcuts",
 				label: tp("items.settingShortcuts"),
-				icon: <Keyboard className="text-[#34B27B]" />,
+				icon: <Keyboard className="text-brand" />,
 				category: "settings" as const,
 				keywords: ["keyboard shortcuts", "hotkeys", "keys"],
 				onSelect: openConfig,
@@ -2047,7 +1688,7 @@ export default function VideoEditor() {
 			handleAddSpeedFromBar,
 			handleAddAnnotationFromBar,
 			handleSuggestZoomsFromBar,
-			handleOpenExportDialog,
+			handleExportClick,
 			handleSaveProject,
 			handleLoadProject,
 			undo,
@@ -2072,7 +1713,7 @@ export default function VideoEditor() {
 					<button
 						type="button"
 						onClick={handleLoadProject}
-						className="px-3 py-1.5 rounded-md bg-[#34B27B] text-white text-sm hover:bg-[#34B27B]/90"
+						className="px-3 py-1.5 rounded-md bg-brand text-white text-sm hover:bg-brand/90"
 					>
 						{ts("project.load")}
 					</button>
@@ -2082,7 +1723,7 @@ export default function VideoEditor() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-[#07070c] text-slate-200 overflow-hidden selection:bg-[#34B27B]/30">
+		<div className="flex flex-col h-screen bg-[#07070c] text-slate-200 overflow-hidden selection:bg-brand/30">
 			<Dialog open={showNewRecordingDialog} onOpenChange={setShowNewRecordingDialog}>
 				<DialogContent
 					className="sm:max-w-[425px]"
@@ -2103,7 +1744,7 @@ export default function VideoEditor() {
 						<button
 							type="button"
 							onClick={handleNewRecordingConfirm}
-							className="px-4 py-2 rounded-md bg-[#34B27B] text-white hover:bg-[#34B27B]/90 text-sm font-medium transition-colors"
+							className="px-4 py-2 rounded-md bg-brand text-white hover:bg-brand/90 text-sm font-medium transition-colors"
 						>
 							{t("newRecording.confirm")}
 						</button>
@@ -2120,7 +1761,7 @@ export default function VideoEditor() {
 				redoCount={redoCount}
 				onUndo={undo}
 				onRedo={redo}
-				onExport={handleOpenExportDialog}
+				onExport={handleExportClick}
 				onSearch={() => setShowCommandPalette(true)}
 				onShortcuts={openConfig}
 				onNewRecording={() => setShowNewRecordingDialog(true)}
@@ -2313,6 +1954,7 @@ export default function VideoEditor() {
 										<PanelAnnotations
 											selectedAnnotationId={selectedAnnotationId}
 											annotationRegions={annotationOnlyRegions}
+											onAnnotationSelect={handleSelectAnnotation}
 											onAnnotationContentChange={handleAnnotationContentChange}
 											onAnnotationTypeChange={handleAnnotationTypeChange}
 											onAnnotationStyleChange={handleAnnotationStyleChange}
@@ -2321,6 +1963,7 @@ export default function VideoEditor() {
 											onAnnotationDelete={handleAnnotationDelete}
 											selectedBlurId={selectedBlurId}
 											blurRegions={blurRegions}
+											onBlurSelect={handleSelectBlur}
 											onBlurDataChange={handleBlurDataPanelChange}
 											onBlurDataCommit={commitState}
 											onBlurDelete={handleAnnotationDelete}
@@ -2417,15 +2060,17 @@ export default function VideoEditor() {
 
 			<ExportDialog
 				isOpen={showExportDialog}
-				onClose={() => setShowExportDialog(false)}
+				onClose={() => exportApi.setShowExportDialog(false)}
 				progress={exportProgress}
 				isExporting={isExporting}
 				error={exportError}
-				onCancel={handleCancelExport}
+				onCancel={exportApi.handleCancelExport}
 				exportFormat={exportFormat}
 				exportedFilePath={exportedFilePath || undefined}
 				onShowInFolder={
-					exportedFilePath ? () => void handleShowExportedFile(exportedFilePath) : undefined
+					exportedFilePath
+						? () => void exportApi.handleShowExportedFile(exportedFilePath)
+						: undefined
 				}
 			/>
 

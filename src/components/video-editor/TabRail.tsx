@@ -62,7 +62,7 @@ export default function TabRail({ activeTab, onSelect, modified = {} }: TabRailP
 							transition-all duration-150 cursor-pointer relative
 							${
 								isActive
-									? "border-[#34B27B]/40 bg-[#34B27B]/10 text-[#34B27B] shadow-[0_0_0_1px_rgba(52,178,123,0.15)_inset]"
+									? "border-brand/40 bg-brand/10 text-brand shadow-[0_0_0_1px_rgba(52,178,123,0.15)_inset]"
 									: "border-white/[0.05] bg-white/[0.02] text-white/40 hover:text-white/60 hover:bg-white/[0.04]"
 							}
 						`}
@@ -72,7 +72,7 @@ export default function TabRail({ activeTab, onSelect, modified = {} }: TabRailP
 							{tab.label}
 						</span>
 						{isModified && (
-							<div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#34B27B] shadow-[0_0_5px_rgba(52,178,123,0.6)]" />
+							<div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-brand shadow-[0_0_5px_rgba(52,178,123,0.6)]" />
 						)}
 					</button>
 				);
