@@ -1,7 +1,7 @@
 import type { Range, Span } from "dnd-timeline";
 import { useTimelineContext } from "dnd-timeline";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 interface OverviewRegion {
 	id: string;
@@ -28,6 +28,8 @@ const VARIANT_COLORS: Record<string, string> = {
 	speed: "#d97706",
 };
 
+const VARIANT_ORDER = ["zoom", "trim", "speed", "annotation", "blur"];
+
 function pct(ms: number, totalMs: number): string {
 	if (totalMs <= 0) return "0%";
 	return `${Math.min(100, Math.max(0, (ms / totalMs) * 100))}%`;
@@ -45,7 +47,6 @@ export default function TimelineOverview({
 }: TimelineOverviewProps) {
 	const { sidebarWidth } = useTimelineContext();
 
-	// Viewport drag state
 	const dragState = useRef<{
 		startX: number;
 		startMs: number;
@@ -99,6 +100,18 @@ export default function TimelineOverview({
 		onSeek(clampedMs / 1000);
 	}
 
+	const groupedBands = useMemo(() => {
+		const groups: Record<string, OverviewRegion[]> = {};
+		for (const region of regions) {
+			if (!groups[region.variant]) groups[region.variant] = [];
+			groups[region.variant].push(region);
+		}
+		return VARIANT_ORDER.filter((v) => groups[v]?.length > 0).map((variant) => ({
+			variant,
+			items: groups[variant],
+		}));
+	}, [regions]);
+
 	if (videoDurationMs <= 0) {
 		return (
 			<div className="h-8 bg-[#06060b] border-b border-white/5 relative flex items-center shrink-0">
@@ -112,16 +125,17 @@ export default function TimelineOverview({
 		);
 	}
 
-	const playheadLeft = pct(currentTimeMs, videoDurationMs);
 	const viewportLeft = pct(viewportStartMs, videoDurationMs);
 	const viewportWidth = `${Math.max(0, ((viewportEndMs - viewportStartMs) / videoDurationMs) * 100)}%`;
+	const playheadLeft = pct(currentTimeMs, videoDurationMs);
+	const bandCount = groupedBands.length;
+	const bandHeightPct = bandCount > 0 ? 100 / bandCount : 100;
 
 	return (
 		<div
 			className="h-8 bg-[#06060b] border-b border-white/5 relative shrink-0"
 			style={{ paddingLeft: sidebarWidth }}
 		>
-			{/* "OVERVIEW" label in the sidebar gutter */}
 			<span
 				className="absolute text-[8px] font-medium tracking-[0.08em] uppercase select-none pointer-events-none"
 				style={{
@@ -140,29 +154,38 @@ export default function TimelineOverview({
 				style={{ left: sidebarWidth, right: 0 }}
 				onClick={handleClick}
 			>
-				{/* Background track */}
 				<div className="absolute inset-0 bg-white/[0.02]" />
 
-				{/* Region blocks */}
-				{regions.map((region) => {
-					const left = pct(region.span.start, videoDurationMs);
-					const width = `${Math.max(0.2, ((region.span.end - region.span.start) / videoDurationMs) * 100)}%`;
-					const color = VARIANT_COLORS[region.variant] ?? "#666";
+				{/* Stacked variant bands */}
+				{groupedBands.map((band, bandIndex) => (
+					<div
+						key={band.variant}
+						className="absolute inset-x-0 rounded-sm overflow-hidden"
+						style={{
+							top: `${bandIndex * bandHeightPct}%`,
+							height: `${bandHeightPct}%`,
+						}}
+					>
+						{band.items.map((region) => {
+							const left = pct(region.span.start, videoDurationMs);
+							const width = `${Math.max(0.2, ((region.span.end - region.span.start) / videoDurationMs) * 100)}%`;
+							const color = VARIANT_COLORS[region.variant] ?? "#666";
+							return (
+								<div
+									key={region.id}
+									className="absolute inset-y-0 rounded-sm opacity-60 group-hover:opacity-80 transition-opacity"
+									style={{
+										left,
+										width,
+										backgroundColor: color,
+									}}
+								/>
+							);
+						})}
+					</div>
+				))}
 
-					return (
-						<div
-							key={region.id}
-							className="absolute top-[1px] bottom-[1px] rounded-sm opacity-70 group-hover:opacity-90 transition-opacity"
-							style={{
-								left,
-								width,
-								backgroundColor: color,
-							}}
-						/>
-					);
-				})}
-
-				{/* Viewport indicator — draggable */}
+				{/* Viewport indicator */}
 				<div
 					className="absolute top-0 bottom-0 border border-white/30 bg-white/[0.06] rounded-sm cursor-grab active:cursor-grabbing hover:bg-white/[0.10] transition-colors"
 					style={{
