@@ -1037,6 +1037,37 @@ export default function VideoEditor() {
 		handleZoomAdded,
 	]);
 
+	const handleAddTrimFromBar = useCallback(() => {
+		if (!duration || duration === 0 || totalMs === 0) return;
+		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
+		if (defaultDuration <= 0) return;
+		const startPos = Math.max(0, Math.min(currentTimeMs, totalMs));
+		const sorted = [...trimRegions].sort((a, b) => a.startMs - b.startMs);
+		const nextRegion = sorted.find((region) => region.startMs > startPos);
+		const gapToNext = nextRegion ? nextRegion.startMs - startPos : totalMs - startPos;
+		const isOverlapping = sorted.some(
+			(region) => startPos >= region.startMs && startPos < region.endMs,
+		);
+		if (isOverlapping || gapToNext <= 0) {
+			toast.error(tTimeline("errors.cannotPlaceTrim"), {
+				description: tTimeline("errors.trimExistsAtLocation"),
+			});
+			return;
+		}
+		const actualDuration = Math.min(defaultRegionDurationMs, gapToNext);
+		handleTrimAdded({ start: startPos, end: startPos + actualDuration });
+		setActiveTab("edit");
+	}, [
+		duration,
+		totalMs,
+		currentTimeMs,
+		trimRegions,
+		defaultRegionDurationMs,
+		tTimeline,
+		handleTrimAdded,
+		setActiveTab,
+	]);
+
 	const handleSuggestZoomsFromBar = useCallback(async () => {
 		if (!duration || duration === 0 || totalMs === 0) return;
 		const defaultDuration = Math.min(defaultRegionDurationMs, totalMs);
@@ -2190,7 +2221,7 @@ export default function VideoEditor() {
 											onGoToEnd={() => handleSeek(duration)}
 											onAddZoom={handleAddZoomFromBar}
 											onAutoEnhance={handleSuggestZoomsFromBar}
-											onTrim={() => setActiveTab("edit")}
+											onTrim={handleAddTrimFromBar}
 											onAddSpeed={handleAddSpeedFromBar}
 											onAddText={handleAddAnnotationFromBar}
 											onAddAudio={() => setActiveTab("audio")}
@@ -2321,7 +2352,7 @@ export default function VideoEditor() {
 								onGoToEnd={() => handleSeek(duration)}
 								onAddZoom={handleAddZoomFromBar}
 								onAutoEnhance={handleSuggestZoomsFromBar}
-								onTrim={() => setActiveTab("edit")}
+								onTrim={handleAddTrimFromBar}
 								onAddSpeed={handleAddSpeedFromBar}
 								onAddText={handleAddAnnotationFromBar}
 								onAddAudio={() => setActiveTab("audio")}
