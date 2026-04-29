@@ -30,7 +30,18 @@ export default function PanelEdit({ trimRegions, selectedTrimId, onTrimDelete }:
 			<div>
 				<div className="flex items-center gap-2 mb-2">
 					<Crop className="w-3.5 h-3.5 text-[#34B27B]" />
-					<span className="text-xs font-semibold text-slate-200">Crop</span>
+					<span className="text-xs font-semibold text-slate-200">{t("crop.title")}</span>
+				</div>
+				<div className="grid grid-cols-4 gap-1 mb-2">
+					{["16:9", "4:3", "1:1", "9:16"].map((ratio) => (
+						<button
+							key={ratio}
+							type="button"
+							className="rounded-lg border border-white/10 bg-white/[0.03] text-slate-400 text-[10px] font-medium py-1.5 hover:bg-white/10 hover:border-white/20 hover:text-slate-200 transition-all"
+						>
+							{ratio}
+						</button>
+					))}
 				</div>
 				<Button
 					variant="outline"

@@ -1,11 +1,4 @@
 import { Sparkles } from "lucide-react";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useScopedT } from "@/contexts/I18nContext";
 import { WEBCAM_LAYOUT_PRESETS } from "@/lib/compositeLayout";
@@ -53,32 +46,34 @@ export default function PanelOverlay({
 					<div className="space-y-2">
 						{/* Preset */}
 						<div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
-							<div className="text-[10px] font-medium text-slate-300 mb-1">
+							<div className="text-[10px] font-medium text-slate-300 mb-1.5">
 								{t("layout.preset")}
 							</div>
-							<Select
-								value={webcamLayoutPreset}
-								onValueChange={(value: WebcamLayoutPreset) => onWebcamLayoutPresetChange?.(value)}
-							>
-								<SelectTrigger className="h-8 bg-black/20 border-white/10 text-xs">
-									<SelectValue placeholder={t("layout.selectPreset")} />
-								</SelectTrigger>
-								<SelectContent>
-									{WEBCAM_LAYOUT_PRESETS.filter((preset) => {
-										if (preset.value === "picture-in-picture") return true;
-										if (preset.value === "vertical-stack") return isPortraitCanvas;
-										return !isPortraitCanvas;
-									}).map((preset) => (
-										<SelectItem key={preset.value} value={preset.value} className="text-xs">
-											{preset.value === "picture-in-picture"
-												? t("layout.pictureInPicture")
-												: preset.value === "vertical-stack"
-													? t("layout.verticalStack")
-													: t("layout.dualFrame")}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<div className="flex flex-col gap-1">
+								{WEBCAM_LAYOUT_PRESETS.filter((preset) => {
+									if (preset.value === "picture-in-picture") return true;
+									if (preset.value === "vertical-stack") return isPortraitCanvas;
+									return !isPortraitCanvas;
+								}).map((preset) => (
+									<button
+										key={preset.value}
+										type="button"
+										onClick={() => onWebcamLayoutPresetChange?.(preset.value)}
+										className={cn(
+											"w-full text-left px-2.5 py-2 rounded-lg border text-[10px] font-medium transition-all",
+											webcamLayoutPreset === preset.value
+												? "bg-[#34B27B]/10 border-[#34B27B]/40 text-[#34B27B]"
+												: "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20",
+										)}
+									>
+										{preset.value === "picture-in-picture"
+											? t("layout.pictureInPicture")
+											: preset.value === "vertical-stack"
+												? t("layout.verticalStack")
+												: t("layout.dualFrame")}
+									</button>
+								))}
+							</div>
 						</div>
 
 						{/* Shape */}

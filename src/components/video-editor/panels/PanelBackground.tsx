@@ -1,8 +1,8 @@
-import Block from "@uiw/react-color-block";
 import { Upload, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScopedT } from "@/contexts/I18nContext";
 import { cn } from "@/lib/utils";
@@ -97,13 +97,13 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 
 	return (
 		<div>
-			<Tabs defaultValue="image" className="w-full">
+			<Tabs defaultValue="gradient" className="w-full">
 				<TabsList className="mb-3 bg-white/5 border border-white/5 p-0.5 w-full grid grid-cols-3 h-7 rounded-lg">
 					<TabsTrigger
-						value="image"
+						value="gradient"
 						className="data-[state=active]:bg-[#34B27B] data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
 					>
-						{t("background.image")}
+						{t("background.gradient")}
 					</TabsTrigger>
 					<TabsTrigger
 						value="color"
@@ -112,12 +112,45 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 						{t("background.color")}
 					</TabsTrigger>
 					<TabsTrigger
-						value="gradient"
+						value="image"
 						className="data-[state=active]:bg-[#34B27B] data-[state=active]:text-white text-slate-400 text-[10px] py-1 rounded-md transition-all"
 					>
-						{t("background.gradient")}
+						{t("background.image")}
 					</TabsTrigger>
 				</TabsList>
+
+				<TabsContent value="gradient" className="mt-0">
+					<div className="grid grid-cols-7 gap-1.5">
+						{GRADIENTS.map((g) => (
+							<div
+								key={g}
+								className={cn(
+									"aspect-square w-9 h-9 rounded-md border-2 overflow-hidden cursor-pointer transition-all duration-200 shadow-sm",
+									gradient === g
+										? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
+										: "border-white/10 hover:border-[#34B27B]/40 opacity-80 hover:opacity-100 bg-white/5",
+								)}
+								style={{ background: g }}
+								onClick={() => {
+									setGradient(g);
+									onWallpaperChange(g);
+								}}
+								role="button"
+							/>
+						))}
+					</div>
+				</TabsContent>
+
+				<TabsContent value="color" className="mt-0">
+					<ColorPicker
+						value={selectedColor}
+						presets={colorPalette}
+						onChange={(c) => {
+							setSelectedColor(c);
+							onWallpaperChange(c);
+						}}
+					/>
+				</TabsContent>
 
 				<TabsContent value="image" className="mt-0 space-y-2">
 					<input
@@ -186,42 +219,6 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 								/>
 							);
 						})}
-					</div>
-				</TabsContent>
-
-				<TabsContent value="color" className="mt-0">
-					<div className="p-1">
-						<Block
-							color={selectedColor}
-							colors={colorPalette}
-							onChange={(color) => {
-								setSelectedColor(color.hex);
-								onWallpaperChange(color.hex);
-							}}
-							style={{ width: "100%", borderRadius: "8px" }}
-						/>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="gradient" className="mt-0">
-					<div className="grid grid-cols-7 gap-1.5">
-						{GRADIENTS.map((g) => (
-							<div
-								key={g}
-								className={cn(
-									"aspect-square w-9 h-9 rounded-md border-2 overflow-hidden cursor-pointer transition-all duration-200 shadow-sm",
-									gradient === g
-										? "border-[#34B27B] ring-1 ring-[#34B27B]/30"
-										: "border-white/10 hover:border-[#34B27B]/40 opacity-80 hover:opacity-100 bg-white/5",
-								)}
-								style={{ background: g }}
-								onClick={() => {
-									setGradient(g);
-									onWallpaperChange(g);
-								}}
-								role="button"
-							/>
-						))}
 					</div>
 				</TabsContent>
 			</Tabs>
