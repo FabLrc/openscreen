@@ -11,6 +11,7 @@ import type {
 	WebcamPosition,
 	ZoomRegion,
 } from "@/components/video-editor/types";
+import type { CursorHighlightConfig } from "@/components/video-editor/videoPlayback/cursorHighlight";
 import {
 	calculateOutputDimensions,
 	type ExportFormat,
@@ -51,6 +52,8 @@ interface ExportDeps {
 	webcamSizePreset: number;
 	webcamPosition: WebcamPosition | null;
 	cursorTelemetry: CursorTelemetryPoint[];
+	cursorHighlight?: CursorHighlightConfig;
+	cursorClickTimestamps?: number[];
 	t: (key: string, params?: Record<string, string>) => string;
 	rawT: (key: string) => string;
 	onPlayPause: (shouldPlay: boolean) => void;
@@ -78,6 +81,8 @@ export function useExport(deps: ExportDeps) {
 		webcamSizePreset,
 		webcamPosition,
 		cursorTelemetry,
+		cursorHighlight,
+		cursorClickTimestamps,
 		t,
 		rawT,
 		onPlayPause,
@@ -194,6 +199,8 @@ export function useExport(deps: ExportDeps) {
 						previewWidth: 1920,
 						previewHeight: 1080,
 						cursorTelemetry,
+						cursorHighlight,
+						cursorClickTimestamps,
 						onProgress: (progress: ExportProgress) => {
 							setExportProgress(progress);
 						},
@@ -316,6 +323,8 @@ export function useExport(deps: ExportDeps) {
 						previewWidth: 1920,
 						previewHeight: 1080,
 						cursorTelemetry,
+						cursorHighlight,
+						cursorClickTimestamps,
 						onProgress: (progress: ExportProgress) => {
 							setExportProgress(progress);
 						},
@@ -388,6 +397,8 @@ export function useExport(deps: ExportDeps) {
 			exportQuality,
 			handleExportSaved,
 			cursorTelemetry,
+			cursorHighlight,
+			cursorClickTimestamps,
 			t,
 			onPlayPause,
 		],

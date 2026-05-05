@@ -2,7 +2,7 @@ import { Upload, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ColorPicker } from "@/components/ui/color-picker";
+import ColorPicker from "@/components/ui/color-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScopedT } from "@/contexts/I18nContext";
 import { cn } from "@/lib/utils";
@@ -143,9 +143,10 @@ export default function PanelBackground({ selected, onWallpaperChange }: PanelBa
 
 				<TabsContent value="color" className="mt-0">
 					<ColorPicker
-						value={selectedColor}
-						presets={colorPalette}
-						onChange={(c) => {
+						selectedColor={selectedColor}
+						colorPalette={colorPalette}
+						translations={{ colorWheel: "Color Wheel", colorPalette: "Color Palette" }}
+						onUpdateColor={(c) => {
 							setSelectedColor(c);
 							onWallpaperChange(c);
 						}}

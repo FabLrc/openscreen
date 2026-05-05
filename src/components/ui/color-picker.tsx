@@ -1,109 +1,161 @@
-import { hexToHsva, hsvaToHex, hsvaToRgba } from "@uiw/react-color";
-import Hue from "@uiw/react-color-hue";
-import Saturation from "@uiw/react-color-saturation";
-import { useState } from "react";
+import { HsvaColor, hexToHsva } from "@uiw/color-convert";
+import Block from "@uiw/react-color-block";
+import Colorful from "@uiw/react-color-colorful";
+import { useEffect, useState } from "react";
+import { Button } from "./button";
+import { Input } from "./input";
 
-import { cn } from "@/lib/utils";
+type BaseProps = {
+	selectedColor: string;
+	colorPalette: string[];
+	onUpdateColor: (color: string) => void;
+};
 
-interface ColorPickerProps {
-	value: string;
-	presets?: string[];
-	onChange: (color: string) => void;
-	className?: string;
-}
+type ColorPickerProps =
+	| (BaseProps & {
+			clearBackgroundOption?: false;
+			translations: Record<"colorWheel" | "colorPalette", string>;
+	  })
+	| (BaseProps & {
+			clearBackgroundOption: true;
+			translations: Record<"colorWheel" | "colorPalette" | "clearBackground", string>;
+	  });
 
-export function ColorPicker({ value, presets = [], onChange, className }: ColorPickerProps) {
-	const [hsva, setHsva] = useState(() => hexToHsva(value));
+export default function ColorPicker(props: ColorPickerProps) {
+	const { selectedColor, colorPalette, translations, onUpdateColor } = props;
+	const [colorMode, setColorMode] = useState<"wheel" | "palette">("wheel");
+	const [hexInput, setHexInput] = useState(selectedColor);
+	const [transparentColorHSVA, setTransparentColorHSVA] = useState<HsvaColor>({
+		h: 0,
+		s: 0,
+		v: 0,
+		a: 0,
+	});
 
-	const handleChange = (newColor: { h?: number; s?: number; v?: number; a?: number }) => {
-		const merged = { ...hsva, ...newColor };
-		setHsva(merged);
-		onChange(hsvaToHex(merged));
+	useEffect(() => {
+		setHexInput(selectedColor);
+	}, [selectedColor]);
+
+	const getTextColor = (color: string) => {
+		if (color === "transparent") return "#ffffff";
+		const r = parseInt(color.slice(1, 3), 16);
+		const g = parseInt(color.slice(3, 5), 16);
+		const b = parseInt(color.slice(5, 7), 16);
+		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+		if (luminance > 186) return "#000000";
+		return "#ffffff";
 	};
 
-	const currentHex = hsvaToHex(hsva);
-	const rgba = hsvaToRgba(hsva);
+	// Normalize the hex input.
+	// Adds a # at the beginning of the input if it's not there.
+	const normalizeHexDraft = (raw: string) => {
+		const trimmed = raw.trim();
+		if (trimmed === "") return "";
+		if (/^[0-9A-Fa-f]/.test(trimmed[0])) return `#${trimmed}`;
+		return trimmed;
+	};
 
+	const handleColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const normalized = normalizeHexDraft(e.target.value);
+		setHexInput(normalized);
+		// Check if the normalized hex is a valid hex color.
+		// It should follow the format #RRGGBB or #RGB.
+		const isValidHexColor =
+			/^#[0-9A-Fa-f]{3}$/.test(normalized) || /^#[0-9A-Fa-f]{6}$/.test(normalized);
+		if (isValidHexColor) {
+			onUpdateColor(normalized);
+		}
+	};
+
+	const toTransparent = (color: string) => {
+		if (color === "transparent") return;
+		const hsva = hexToHsva(color);
+		hsva.a = 0;
+		return hsva;
+	};
 	return (
-		<div className={cn("space-y-3", className)}>
-			<div className="rounded-lg overflow-hidden">
-				<Saturation
-					hue={hsva.h}
-					hsva={hsva}
-					onChange={(color) => handleChange(color)}
-					radius="8px"
-					style={{ width: "100%", height: 160 }}
-				/>
-			</div>
-
-			<Hue
-				hue={hsva.h}
-				onChange={(color) => handleChange({ h: color.h })}
-				direction="horizontal"
-				style={{ width: "100%", height: 12 }}
-			/>
-
-			{presets.length > 0 && (
-				<div>
-					<span className="text-[10px] font-medium text-slate-500 mb-1.5 block uppercase tracking-wider">
-						Presets
+		<div className="p-1 flex flex-col gap-4 items-center">
+			<div className="flex items-center gap-2 w-full">
+				<Button
+					variant="outline"
+					size="sm"
+					className="w-full h-9 justify-start gap-2 bg-white/5 border-white/10 hover:bg-white/10 px-2"
+					onClick={() => setColorMode("wheel")}
+					style={{
+						backgroundColor: colorMode === "wheel" ? "#34B27B" : "transparent",
+					}}
+				>
+					<span className="text-xs text-slate-300 truncate flex-1 text-left">
+						{translations.colorWheel}
 					</span>
-					<div className="grid grid-cols-8 gap-1.5">
-						{presets.map((c) => {
-							const presetHex = hsvaToHex(hexToHsva(c));
-							return (
-								<div
-									key={c}
-									className={cn(
-										"aspect-square w-7 h-7 rounded-md border-2 cursor-pointer transition-all duration-200",
-										currentHex.toLowerCase() === presetHex.toLowerCase()
-											? "border-brand ring-1 ring-brand/30"
-											: "border-white/10 hover:border-brand/40",
-									)}
-									style={{ background: c }}
-									onClick={() => {
-										const newHsva = hexToHsva(c);
-										setHsva(newHsva);
-										onChange(hsvaToHex(newHsva));
-									}}
-									role="button"
-								/>
-							);
-						})}
+				</Button>
+				<Button
+					variant="outline"
+					size="sm"
+					className="w-full h-9 justify-start gap-2 bg-white/5 border-white/10 hover:bg-white/10 px-2"
+					onClick={() => setColorMode("palette")}
+					style={{
+						backgroundColor: colorMode === "palette" ? "#34B27B" : "transparent",
+					}}
+				>
+					<span className="text-xs text-slate-300 truncate flex-1 text-left">
+						{translations.colorPalette}
+					</span>
+				</Button>
+			</div>
+			{colorMode === "wheel" && (
+				<>
+					<div
+						className={`w-full h-20 flex items-center justify-center border border-white/10 rounded-lg`}
+						style={{ backgroundColor: selectedColor }}
+					>
+						<span style={{ color: getTextColor(selectedColor) }}>{selectedColor}</span>
 					</div>
-				</div>
-			)}
-
-			<div className="flex items-center gap-2">
-				<div
-					className="w-8 h-8 rounded-md border border-white/10 shrink-0"
-					style={{ background: currentHex }}
-				/>
-				<div className="flex-1 flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-black/20 border border-white/10">
-					<span className="text-[10px] text-slate-500 font-mono">#</span>
-					<input
-						value={currentHex.replace("#", "")}
-						onChange={(e) => {
-							const input = e.target.value;
-							const cleaned = `#${input}`;
-							if (/^#[0-9a-fA-F]{6}$/.test(cleaned)) {
-								const newHsva = hexToHsva(cleaned);
-								setHsva(newHsva);
-								onChange(cleaned);
-							}
+					<Colorful
+						color={selectedColor !== "transparent" ? selectedColor : transparentColorHSVA}
+						onChange={(color) => {
+							onUpdateColor(color.hex);
 						}}
-						className="flex-1 bg-transparent text-xs text-slate-200 font-mono outline-none placeholder:text-slate-600"
-						placeholder="000000"
-						maxLength={6}
+						style={{
+							borderRadius: "8px",
+						}}
+						disableAlpha={true}
 					/>
-				</div>
-				<div className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-black/20 border border-white/10">
-					<span className="text-[9px] text-slate-500 font-mono">RGBA</span>
-					<span className="text-[10px] text-slate-300 font-mono tabular-nums">
-						{Math.round(rgba.r)},{Math.round(rgba.g)},{Math.round(rgba.b)}
-					</span>
-				</div>
-			</div>
+					<Input
+						type="text"
+						value={hexInput}
+						className="w-full h-9 rounded-md border border-white/10 bg-white/5 px-2 text-xs text-slate-200 outline-none focus:border-[#34B27B]/50 focus:ring-1 focus:ring-[#34B27B]/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+						onChange={handleColorInputChange}
+					/>
+				</>
+			)}
+			{colorMode === "palette" && (
+				<Block
+					color={selectedColor !== "transparent" ? selectedColor : transparentColorHSVA}
+					colors={colorPalette}
+					onChange={(color) => {
+						onUpdateColor(color.hex);
+					}}
+					style={{
+						width: "100%",
+						borderRadius: "8px",
+					}}
+				/>
+			)}
+			{props.clearBackgroundOption === true && (
+				<Button
+					variant="ghost"
+					size="sm"
+					className="w-full mt-2 text-xs h-7 hover:bg-white/5 text-slate-400"
+					onClick={() => {
+						const hsva = toTransparent(selectedColor);
+						if (hsva) setTransparentColorHSVA(hsva);
+						onUpdateColor("transparent");
+					}}
+				>
+					{props.translations.clearBackground}
+				</Button>
+			)}
 		</div>
 	);
 }

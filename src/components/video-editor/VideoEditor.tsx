@@ -124,6 +124,7 @@ export default function VideoEditor() {
 		webcamMaskShape,
 		webcamSizePreset,
 		webcamPosition,
+		cursorHighlight,
 	} = editorState;
 
 	// ── Non-undoable state
@@ -142,6 +143,7 @@ export default function VideoEditor() {
 	const durationRef = useRef(duration);
 	durationRef.current = duration;
 	const [cursorTelemetry, setCursorTelemetry] = useState<CursorTelemetryPoint[]>([]);
+	const [cursorClickTimestamps, setCursorClickTimestamps] = useState<number[]>([]);
 	const [selectedZoomId, setSelectedZoomId] = useState<string | null>(null);
 	const [selectedTrimId, setSelectedTrimId] = useState<string | null>(null);
 	const [selectedSpeedId, setSelectedSpeedId] = useState<string | null>(null);
@@ -162,6 +164,12 @@ export default function VideoEditor() {
 	const nextSpeedIdRef = useRef(1);
 
 	const { shortcuts, isMac, openConfig } = useShortcuts();
+	// Off-Mac doesn't have click telemetry, so force `onlyOnClicks` off for
+	// renderers while keeping the persisted value intact for round-tripping.
+	const effectiveCursorHighlight = useMemo(
+		() => (isMac ? cursorHighlight : { ...cursorHighlight, onlyOnClicks: false }),
+		[cursorHighlight, isMac],
+	);
 	const { locale, setLocale, t: rawT } = useI18n();
 	const t = useScopedT("editor");
 	const ts = useScopedT("settings");
@@ -192,6 +200,8 @@ export default function VideoEditor() {
 		webcamSizePreset,
 		webcamPosition,
 		cursorTelemetry,
+		cursorHighlight: effectiveCursorHighlight,
+		cursorClickTimestamps,
 		t,
 		rawT,
 		onPlayPause: (shouldPlay) => {
@@ -293,6 +303,7 @@ export default function VideoEditor() {
 				webcamMaskShape: normalizedEditor.webcamMaskShape,
 				webcamSizePreset: normalizedEditor.webcamSizePreset,
 				webcamPosition: normalizedEditor.webcamPosition,
+				cursorHighlight: normalizedEditor.cursorHighlight,
 			});
 			exportApi.setExportQuality(normalizedEditor.exportQuality);
 			exportApi.setExportFormat(normalizedEditor.exportFormat);
@@ -366,6 +377,7 @@ export default function VideoEditor() {
 			gifFrameRate,
 			gifLoop,
 			gifSizePreset,
+			cursorHighlight,
 		});
 	}, [
 		currentProjectMedia,
@@ -389,6 +401,7 @@ export default function VideoEditor() {
 		gifFrameRate,
 		gifLoop,
 		gifSizePreset,
+		cursorHighlight,
 	]);
 
 	const hasUnsavedChanges = hasProjectUnsavedChanges(currentProjectSnapshot, lastSavedSnapshot);
@@ -496,7 +509,7 @@ export default function VideoEditor() {
 				return false;
 			}
 
-			const projectData = createProjectData(currentProjectMedia, {
+			const editorState = {
 				wallpaper,
 				shadowIntensity,
 				showBlur,
@@ -518,14 +531,18 @@ export default function VideoEditor() {
 				gifFrameRate,
 				gifLoop,
 				gifSizePreset,
-			});
+				cursorHighlight,
+			};
+			const projectData = createProjectData(currentProjectMedia, editorState);
 
 			const fileNameBase =
 				currentProjectMedia.screenVideoPath
 					.split(/[\\/]/)
 					.pop()
 					?.replace(/\.[^.]+$/, "") || `project-${Date.now()}`;
-			const projectSnapshot = JSON.stringify(projectData);
+			// Match the normalization path used by `currentProjectSnapshot` so the
+			// post-save baseline compares equal and `hasUnsavedChanges` clears.
+			const projectSnapshot = createProjectSnapshot(currentProjectMedia, editorState);
 			const result = await window.electronAPI.saveProjectFile(
 				projectData,
 				fileNameBase,
@@ -576,6 +593,7 @@ export default function VideoEditor() {
 			videoPath,
 			t,
 			webcamSizePreset,
+			cursorHighlight,
 		],
 	);
 
@@ -650,6 +668,7 @@ export default function VideoEditor() {
 			if (!sourcePath) {
 				if (mounted) {
 					setCursorTelemetry([]);
+					setCursorClickTimestamps([]);
 				}
 				return;
 			}
@@ -658,11 +677,13 @@ export default function VideoEditor() {
 				const result = await window.electronAPI.getCursorTelemetry(sourcePath);
 				if (mounted) {
 					setCursorTelemetry(result.success ? result.samples : []);
+					setCursorClickTimestamps(result.success ? (result.clicks ?? []) : []);
 				}
 			} catch (telemetryError) {
 				console.warn("Unable to load cursor telemetry:", telemetryError);
 				if (mounted) {
 					setCursorTelemetry([]);
+					setCursorClickTimestamps([]);
 				}
 			}
 		}
@@ -1846,6 +1867,8 @@ export default function VideoEditor() {
 												onBlurDataChange={handleBlurDataPreviewChange}
 												onBlurDataCommit={commitState}
 												cursorTelemetry={cursorTelemetry}
+												cursorHighlight={effectiveCursorHighlight}
+												cursorClickTimestamps={cursorClickTimestamps}
 											/>
 										</div>
 									</div>

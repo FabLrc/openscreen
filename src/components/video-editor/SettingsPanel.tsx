@@ -1,5 +1,4 @@
-﻿import Block from "@uiw/react-color-block";
-import {
+﻿import {
 	Bug,
 	Crop,
 	Download,
@@ -41,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { resolveImageWallpaperUrl, WALLPAPER_PATHS } from "@/lib/wallpaper";
 import { type AspectRatio, isPortraitAspectRatio } from "@/utils/aspectRatioUtils";
 import { getTestId } from "@/utils/getTestId";
+import ColorPicker from "../ui/color-picker";
 import { AnnotationSettingsPanel } from "./AnnotationSettingsPanel";
 import { BlurSettingsPanel } from "./BlurSettingsPanel";
 import { CropControl } from "./CropControl";
@@ -1109,20 +1109,18 @@ export function SettingsPanel({
 									</TabsContent>
 
 									<TabsContent value="color" className="mt-0">
-										<div className="p-1">
-											<Block
-												color={selectedColor}
-												colors={colorPalette}
-												onChange={(color) => {
-													setSelectedColor(color.hex);
-													onWallpaperChange(color.hex);
-												}}
-												style={{
-													width: "100%",
-													borderRadius: "8px",
-												}}
-											/>
-										</div>
+										<ColorPicker
+											selectedColor={selectedColor}
+											colorPalette={colorPalette}
+											translations={{
+												colorWheel: t("background.colorWheel"),
+												colorPalette: t("background.colorPalette"),
+											}}
+											onUpdateColor={(color) => {
+												setSelectedColor(color);
+												onWallpaperChange(color);
+											}}
+										/>
 									</TabsContent>
 
 									<TabsContent value="gradient" className="mt-0">
